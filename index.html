@@ -903,6 +903,7 @@ tbody tr:last-child td{border-bottom:none}
           <button id="dcp-tab-identidad" class="btn sm" style="background:#7c3aed;color:#fff" onclick="dcpCambioTab('identidad')">🏢 Identidad Corporativa</button>
           <button id="dcp-tab-cargos"    class="btn gh sm" onclick="dcpCambioTab('cargos')">👔 Cargos Gerente/Director</button>
           <button id="dcp-tab-ambos"     class="btn gh sm" onclick="dcpCambioTab('ambos')">🔀 Ambos cambios</button>
+          <button id="dcp-tab-multisoc" class="btn gh sm" onclick="dcpCambioTab('multisoc')">🏬 Multi-Sociedad</button>
           <button id="dcp-tab-pendientes" class="btn gh sm" onclick="dcpCambioTab('pendientes')">⏳ Sin marcar (pendientes)</button>
           <span id="dcp-cambios-stats" style="margin-left:auto;font-size:11px;color:var(--tx3);font-weight:600"></span>
         </div>
@@ -917,6 +918,7 @@ tbody tr:last-child td{border-bottom:none}
                 <th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--brd);font-weight:700;color:var(--tx3)">Estado</th>
                 <th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--brd);font-weight:700;color:#7c3aed">🏢 Identidad</th>
                 <th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--brd);font-weight:700;color:#0284c7">👔 Cargos</th>
+                <th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--brd);font-weight:700;color:#059669">🏬 Multi-Sociedad</th>
               </tr>
             </thead>
             <tbody id="dcp-cambios-body"></tbody>
@@ -2098,6 +2100,7 @@ tbody tr:last-child td{border-bottom:none}
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span id="rb-contador" style="font-size:11px;color:var(--tx3);font-weight:600"></span>
           <button class="btn sm" style="background:#7c3aed;color:#fff;white-space:nowrap" onclick="rbAbrirListadoCambios()" title="Ver listado comparativo de cambios vs Listado Maestro">📊 Listado de Cambios</button>
+          <button id="rb-btn-antiguedad" class="btn sm" style="background:#dc2626;color:#fff;white-space:nowrap;position:relative" onclick="rbAbrirAlertaAntiguedad()" title="Solicitudes con 1, 2 o 3 meses sin oficializar">⏰ Alerta Antigüedad <span id="rb-antiguedad-badge" style="display:none;background:#fff;color:#dc2626;border-radius:99px;padding:0 6px;font-size:10px;font-weight:800;margin-left:4px"></span></button>
           <button class="btn gh sm" onclick="rbLimpiarFiltros()" style="white-space:nowrap">✕ Limpiar</button>
         </div>
       </div>
@@ -2152,6 +2155,7 @@ tbody tr:last-child td{border-bottom:none}
           <button id="rb-tab-identidad" class="btn sm" style="background:#7c3aed;color:#fff" onclick="rbCambioTab('identidad')">🏢 Identidad Corporativa</button>
           <button id="rb-tab-cargos" class="btn gh sm" onclick="rbCambioTab('cargos')">👔 Cargos Gerente/Director</button>
           <button id="rb-tab-ambos" class="btn gh sm" onclick="rbCambioTab('ambos')">🔀 Ambos cambios</button>
+          <button id="rb-tab-multisoc" class="btn gh sm" onclick="rbCambioTab('multisoc')">🏬 Multi-Sociedad</button>
           <button id="rb-tab-pendientes" class="btn gh sm" onclick="rbCambioTab('pendientes')">⏳ Sin marcar (pendientes)</button>
           <span id="rb-cambios-stats" style="margin-left:auto;font-size:11px;color:var(--tx3);font-weight:600"></span>
         </div>
@@ -2166,6 +2170,7 @@ tbody tr:last-child td{border-bottom:none}
                 <th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--brd);font-weight:700;color:var(--tx3)">Versión LM</th>
                 <th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--brd);font-weight:700;color:#7c3aed">🏢 Identidad</th>
                 <th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--brd);font-weight:700;color:#0284c7">👔 Cargos</th>
+                <th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--brd);font-weight:700;color:#059669">🏬 Multi-Soc.</th>
                 <th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--brd);font-weight:700;color:var(--tx3)">Estado RB</th>
               </tr>
             </thead>
@@ -2179,6 +2184,55 @@ tbody tr:last-child td{border-bottom:none}
         <div style="padding:12px 22px;border-top:1px solid var(--brd);display:flex;gap:8px;justify-content:flex-end">
           <button class="btn sm" style="background:#1e7145;color:#fff" onclick="rbExportarCambiosCSV()">📥 Descargar Excel</button>
           <button class="btn gh sm" onclick="document.getElementById('rb-mo-cambios').style.display='none'">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Alerta de Antigüedad sin Oficializar -->
+    <div id="rb-mo-antiguedad" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
+      <div style="background:var(--bg);border-radius:12px;padding:0;width:980px;max-width:97vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.28)">
+        <!-- Header -->
+        <div style="padding:18px 22px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--tx)">⏰ Alerta de Antigüedad — Solicitudes sin Oficializar</div>
+            <div style="font-size:11px;color:var(--tx3);margin-top:2px">Solicitudes activas (no oficializadas, no anuladas, no rechazadas) agrupadas por tiempo transcurrido desde la fecha de solicitud</div>
+          </div>
+          <button class="btn gh sm" onclick="document.getElementById('rb-mo-antiguedad').style.display='none'">✕ Cerrar</button>
+        </div>
+        <!-- Tabs + Stats -->
+        <div style="padding:12px 22px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <button id="rb-ant-tab-1m" class="btn sm" style="background:#d97706;color:#fff" onclick="rbAntiguedadTab('1m')">🟡 1 Mes</button>
+          <button id="rb-ant-tab-2m" class="btn gh sm" onclick="rbAntiguedadTab('2m')">🟠 2 Meses</button>
+          <button id="rb-ant-tab-3m" class="btn gh sm" onclick="rbAntiguedadTab('3m')">🔴 3 Meses o más</button>
+          <button id="rb-ant-tab-todos" class="btn gh sm" onclick="rbAntiguedadTab('todos')">📋 Todas (1m+)</button>
+          <span id="rb-antiguedad-stats" style="margin-left:auto;font-size:11px;color:var(--tx3);font-weight:600"></span>
+        </div>
+        <!-- Table -->
+        <div style="overflow-y:auto;flex:1;padding:0 22px 16px">
+          <table id="rb-antiguedad-table" style="width:100%;border-collapse:collapse;font-size:11px;margin-top:12px">
+            <thead>
+              <tr style="background:var(--bg3);position:sticky;top:0;z-index:1">
+                <th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--brd);font-weight:700;color:var(--tx3)">#</th>
+                <th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--brd);font-weight:700;color:var(--tx3)">Código</th>
+                <th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--brd);font-weight:700;color:var(--tx3)">Nombre del Documento</th>
+                <th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--brd);font-weight:700;color:var(--tx3)">Solicitante</th>
+                <th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--brd);font-weight:700;color:var(--tx3)">Área</th>
+                <th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--brd);font-weight:700;color:var(--tx3)">Fecha Solicitud</th>
+                <th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--brd);font-weight:700;color:var(--tx3)">Días Transcurridos</th>
+                <th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--brd);font-weight:700;color:var(--tx3)">Estado Actual</th>
+                <th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--brd);font-weight:700;color:var(--tx3)">Antigüedad</th>
+              </tr>
+            </thead>
+            <tbody id="rb-antiguedad-body"></tbody>
+          </table>
+          <div id="rb-antiguedad-empty" style="display:none;padding:32px;text-align:center;color:var(--tx3);font-size:12px">
+            ✅ Sin solicitudes pendientes en esta categoría.
+          </div>
+        </div>
+        <!-- Footer -->
+        <div style="padding:12px 22px;border-top:1px solid var(--brd);display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn sm" style="background:#1e7145;color:#fff" onclick="rbExportarAntiguedadXLSX()">📥 Descargar Excel</button>
+          <button class="btn gh sm" onclick="document.getElementById('rb-mo-antiguedad').style.display='none'">Cerrar</button>
         </div>
       </div>
     </div>
@@ -2234,6 +2288,7 @@ tbody tr:last-child td{border-bottom:none}
         <button class="btn gh sm" onclick="nfLimpiar()">🔄 Nuevo formulario</button>
         <button class="btn gh sm" onclick="nfRecuperarUltimo()" title="Recupera el último formato de novedad generado en esta sesión">📋 Recuperar último</button>
         <button class="btn gh sm" onclick="nfCargarPlantilla()" title="Llenar formulario desde Excel plantilla">📂 Cargar plantilla</button>
+        <button class="btn gh sm" onclick="nfCargarExcelOficial()" title="Cargar el Excel oficial del formato (F-SOP-0001-5) tal como se diligencia, con celdas combinadas">📊 Cargar Excel oficial</button>
         <button class="btn gh sm" onclick="nfCargarPDF()" title="Cargar un PDF de novedad generado previamente para editarlo">📄 Cargar PDF</button>
         <input type="file" id="nf-pdf-input" accept=".pdf" style="display:none" onchange="nfLeerPDF(this)">
         <button class="btn sm" style="background:var(--T)" onclick="nfGuardar()">💾 Guardar solicitud</button>
@@ -2535,6 +2590,7 @@ tbody tr:last-child td{border-bottom:none}
     <div class="fp"><label class="fl">Codigo Antiguo</label><input class="fi" id="d-codant" value="No Aplica"></div>
     <div class="fp fgf"><label class="fl rq">Descripcion (Espanol)</label><input class="fi" id="d-desc" oninput="onDesc()" placeholder="Nombre del documento"><div class="fh">Formato Nombre Propio automatico y traduccion al ingles.</div></div>
     <div class="fp fgf"><label class="fl">Description (English)</label><input class="fi au" id="d-desen" readonly placeholder="Traduccion automatica"></div>
+    <div class="fp fgf"><label class="fl">Descrição (Português)</label><input class="fi au" id="d-despt" readonly placeholder="Tradução automática"></div>
   </div>
   <div class="fsec">Clasificacion</div>
   <div class="fg3" style="margin-bottom:3px">
@@ -4321,6 +4377,7 @@ function dcpRenderDetailPanel(d){
             + '<span style="font-size:10px;color:var(--tx3);background:var(--bg4);padding:2px 8px;border-radius:99px">v'+(dcpFv(d.version)||'—')+'</span>'
             + (d.cambioIdentidad==='SI'?'<span style="background:#ede9fe;color:#7c3aed;border-radius:4px;padding:3px 9px;font-size:10px;font-weight:700">\uD83C\uDFE2 Identidad</span>':'')
             + (d.cambioCargos==='SI'?'<span style="background:#e0f2fe;color:#0284c7;border-radius:4px;padding:3px 9px;font-size:10px;font-weight:700">\uD83D\uDC54 Cargos</span>':'')
+            + (d.cambioMultiSociedad==='SI'?'<span style="background:#d1fae5;color:#059669;border-radius:4px;padding:3px 9px;font-size:10px;font-weight:700">\uD83C\uDFEC Multi-Soc.</span>':'')
           + '</div>'
           // ── Barra de estado Ruta de Borrador ──
           + (function(){
@@ -4388,7 +4445,7 @@ function dcpRenderDetailPanel(d){
       + '</div>'
     + '</div>'
     // ── CAMBIOS IDENTIDAD / CARGOS ──
-    + '<div style="padding:12px 18px;border-bottom:1px solid var(--brd);background:#f8fafc">'      + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--T);margin-bottom:10px">🏷️ Seguimiento de Cambios Aplicados</div>'      + '<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:'+(d.cambioIdentidad==='SI'||d.cambioCargos==='SI'?'8px':'0')+';">'        + '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)">'          + '<input type="checkbox" '+(d.cambioIdentidad==='SI'?'checked':'')+' onchange="dcpToggleCambio('+d.id+',\'identidad\',this.checked)" style="width:16px;height:16px;accent-color:#7c3aed;cursor:pointer">'          + '<span>🏢 Cambio Identidad Corporativa</span>'        + '</label>'        + '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)">'          + '<input type="checkbox" '+(d.cambioCargos==='SI'?'checked':'')+' onchange="dcpToggleCambio('+d.id+',\'cargos\',this.checked)" style="width:16px;height:16px;accent-color:#0284c7;cursor:pointer">'          + '<span>👔 Cambio Cargos (Gerente/Director)</span>'        + '</label>'      + '</div>'      + (d.cambioIdentidad==='SI'||d.cambioCargos==='SI' ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">'        + (d.cambioIdentidad==='SI'?'<span style="background:#ede9fe;color:#7c3aed;border-radius:4px;padding:3px 10px;font-size:10px;font-weight:700">✓ Identidad Corporativa</span>':'')        + (d.cambioCargos==='SI'?'<span style="background:#e0f2fe;color:#0284c7;border-radius:4px;padding:3px 10px;font-size:10px;font-weight:700">✓ Cargos Gerente/Director</span>':'')        + '</div>' : '')    + '</div>'    // ── HISTORIAL ──
+    + '<div style="padding:12px 18px;border-bottom:1px solid var(--brd);background:#f8fafc">'      + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--T);margin-bottom:10px">🏷️ Seguimiento de Cambios Aplicados</div>'      + '<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:'+(d.cambioIdentidad==='SI'||d.cambioCargos==='SI'||d.cambioMultiSociedad==='SI'?'8px':'0')+';">'        + '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)">'          + '<input type="checkbox" '+(d.cambioIdentidad==='SI'?'checked':'')+' onchange="dcpToggleCambio('+d.id+',\'identidad\',this.checked)" style="width:16px;height:16px;accent-color:#7c3aed;cursor:pointer">'          + '<span>🏢 Cambio Identidad Corporativa</span>'        + '</label>'        + '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)">'          + '<input type="checkbox" '+(d.cambioCargos==='SI'?'checked':'')+' onchange="dcpToggleCambio('+d.id+',\'cargos\',this.checked)" style="width:16px;height:16px;accent-color:#0284c7;cursor:pointer">'          + '<span>👔 Cambio Cargos (Gerente/Director)</span>'        + '</label>'        + '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)">'          + '<input type="checkbox" '+(d.cambioMultiSociedad==='SI'?'checked':'')+' onchange="dcpToggleCambio('+d.id+',\'multisoc\',this.checked)" style="width:16px;height:16px;accent-color:#059669;cursor:pointer">'          + '<span>🏬 Aplica Multi-Sociedad</span>'        + '</label>'      + '</div>'      + (d.cambioIdentidad==='SI'||d.cambioCargos==='SI'||d.cambioMultiSociedad==='SI' ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">'        + (d.cambioIdentidad==='SI'?'<span style="background:#ede9fe;color:#7c3aed;border-radius:4px;padding:3px 10px;font-size:10px;font-weight:700">✓ Identidad Corporativa</span>':'')        + (d.cambioCargos==='SI'?'<span style="background:#e0f2fe;color:#0284c7;border-radius:4px;padding:3px 10px;font-size:10px;font-weight:700">✓ Cargos Gerente/Director</span>':'')        + (d.cambioMultiSociedad==='SI'?'<span style="background:#d1fae5;color:#059669;border-radius:4px;padding:3px 10px;font-size:10px;font-weight:700">✓ Multi-Sociedad</span>':'')        + '</div>' : '')    + '</div>'    // ── HISTORIAL ──
     + '<div style="padding:14px 18px">'      + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--T);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--tl)">🕐 Historial de cambios</div>'      + histHtml    + '</div>';
 
   panel.innerHTML = html;
@@ -4420,12 +4477,18 @@ function _sincronizarCambiosDesdeSolicitudes(){
     if(s.cambioCargos==='SI' && d.cambioCargos!=='SI'){
       d.cambioCargos='SI'; changed=true;
     }
+    if(s.cambioMultiSociedad==='SI' && d.cambioMultiSociedad!=='SI'){
+      d.cambioMultiSociedad='SI'; changed=true;
+    }
     // doc → RB (doc manda si RB no tiene la marca)
     if(d.cambioIdentidad==='SI' && s.cambioIdentidad!=='SI'){
       s.cambioIdentidad='SI'; changed=true;
     }
     if(d.cambioCargos==='SI' && s.cambioCargos!=='SI'){
       s.cambioCargos='SI'; changed=true;
+    }
+    if(d.cambioMultiSociedad==='SI' && s.cambioMultiSociedad!=='SI'){
+      s.cambioMultiSociedad='SI'; changed=true;
     }
   });
   if(changed){
@@ -4473,7 +4536,8 @@ function _cambioHeredarDeSolicitudes(codigo){
   var s = sols[0];
   return {
     cambioIdentidad: s.cambioIdentidad==='SI' ? 'SI' : '',
-    cambioCargos:    s.cambioCargos==='SI'    ? 'SI' : ''
+    cambioCargos:    s.cambioCargos==='SI'    ? 'SI' : '',
+    cambioMultiSociedad: s.cambioMultiSociedad==='SI' ? 'SI' : ''
   };
 }
 
@@ -4481,9 +4545,9 @@ function _cambioHeredarDeSolicitudes(codigo){
 function dcpToggleCambio(docId, tipo, checked){
   var d = docs.find(function(x){ return x.id===docId; });
   if(!d){ toast('Documento no encontrado','er'); return; }
-  var campo = tipo==='identidad' ? 'cambioIdentidad' : 'cambioCargos';
+  var campo = tipo==='identidad' ? 'cambioIdentidad' : tipo==='cargos' ? 'cambioCargos' : 'cambioMultiSociedad';
   var valor = checked ? 'SI' : '';
-  var etiqueta = tipo==='identidad' ? 'Cambio Identidad Corporativa' : 'Cambio Cargos (Gerente/Director)';
+  var etiqueta = tipo==='identidad' ? 'Cambio Identidad Corporativa' : tipo==='cargos' ? 'Cambio Cargos (Gerente/Director)' : 'Aplica Multi-Sociedad';
   // Sincronizar en docs[] Y en solicitudes[] del mismo código
   _cambioSyncDoc(d.codigoActual, campo, valor);
   logA(currentUser?currentUser.nombre:'Sistema','Cambio marcado',
@@ -4504,8 +4568,8 @@ function dcpAbrirListadoCambios(){
 
 function dcpCambioTab(tab){
   _dcpCambioTabActiva = tab;
-  var colores = {identidad:'#7c3aed', cargos:'#0284c7', ambos:'#059669', pendientes:'#92400e'};
-  ['identidad','cargos','ambos','pendientes'].forEach(function(t){
+  var colores = {identidad:'#7c3aed', cargos:'#0284c7', ambos:'#059669', multisoc:'#059669', pendientes:'#92400e'};
+  ['identidad','cargos','ambos','multisoc','pendientes'].forEach(function(t){
     var btn = document.getElementById('dcp-tab-'+t);
     if(!btn) return;
     btn.style.background = t===tab ? colores[t] : '';
@@ -4522,8 +4586,9 @@ function _dcpGetFiltered(tab){
   });
   if(tab==='identidad')   return lmDocs.filter(function(d){ return d.cambioIdentidad==='SI'; });
   if(tab==='cargos')      return lmDocs.filter(function(d){ return d.cambioCargos==='SI'; });
+  if(tab==='multisoc')    return lmDocs.filter(function(d){ return d.cambioMultiSociedad==='SI'; });
   if(tab==='ambos')       return lmDocs.filter(function(d){ return d.cambioIdentidad==='SI' && d.cambioCargos==='SI'; });
-  return lmDocs.filter(function(d){ return d.cambioIdentidad!=='SI' && d.cambioCargos!=='SI'; });
+  return lmDocs.filter(function(d){ return d.cambioIdentidad!=='SI' && d.cambioCargos!=='SI' && d.cambioMultiSociedad!=='SI'; });
 }
 
 function dcpRenderCambiosTabla(tab){
@@ -4533,14 +4598,16 @@ function dcpRenderCambiosTabla(tab){
   });
   var cntId   = lmDocs.filter(function(d){ return d.cambioIdentidad==='SI'; }).length;
   var cntCar  = lmDocs.filter(function(d){ return d.cambioCargos==='SI'; }).length;
+  var cntMs   = lmDocs.filter(function(d){ return d.cambioMultiSociedad==='SI'; }).length;
   var cntAmb  = lmDocs.filter(function(d){ return d.cambioIdentidad==='SI'&&d.cambioCargos==='SI'; }).length;
-  var cntPend = lmDocs.filter(function(d){ return d.cambioIdentidad!=='SI'&&d.cambioCargos!=='SI'; }).length;
+  var cntPend = lmDocs.filter(function(d){ return d.cambioIdentidad!=='SI'&&d.cambioCargos!=='SI'&&d.cambioMultiSociedad!=='SI'; }).length;
 
   var statsEl = document.getElementById('dcp-cambios-stats');
   if(statsEl) statsEl.innerHTML =
     'LM total: <strong>'+lmDocs.length+'</strong> &nbsp;|&nbsp; '+
     '🏢 Identidad: <strong style="color:#7c3aed">'+cntId+'</strong> &nbsp;|&nbsp; '+
     '👔 Cargos: <strong style="color:#0284c7">'+cntCar+'</strong> &nbsp;|&nbsp; '+
+    '🏬 Multi-Sociedad: <strong style="color:#059669">'+cntMs+'</strong> &nbsp;|&nbsp; '+
     '🔀 Ambos: <strong style="color:#059669">'+cntAmb+'</strong> &nbsp;|&nbsp; '+
     '⏳ Pendientes: <strong style="color:#92400e">'+cntPend+'</strong>';
 
@@ -4582,6 +4649,9 @@ function dcpRenderCambiosTabla(tab){
     var carBadge = d.cambioCargos==='SI'
       ? '<span style="background:#e0f2fe;color:#0284c7;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700">✓ Sí</span>'
       : '<span style="color:var(--tx3);font-size:10px">—</span>';
+    var msBadge  = d.cambioMultiSociedad==='SI'
+      ? '<span style="background:#d1fae5;color:#059669;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700">✓ Sí</span>'
+      : '<span style="color:var(--tx3);font-size:10px">—</span>';
     return '<tr style="'+bg+'">'
       +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);font-family:monospace;font-weight:700;color:var(--T3);font-size:10px">'+( d.codigoActual||'')+'</td>'
       +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);color:var(--tx);max-width:280px">'+( d.descripcion||'')+'</td>'
@@ -4590,6 +4660,7 @@ function dcpRenderCambiosTabla(tab){
       +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd)">'+estBadge+'</td>'
       +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);text-align:center">'+idBadge+'</td>'
       +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);text-align:center">'+carBadge+'</td>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);text-align:center">'+msBadge+'</td>'
       +'</tr>';
   }).join('');
 }
@@ -4600,6 +4671,7 @@ function dcpExportarCambiosXLSX(){
   var tabLabels = {
     identidad: 'Identidad Corporativa',
     cargos:    'Cargos Gerente-Director',
+    multisoc:  'Multi-Sociedad',
     ambos:     'Ambos Cambios',
     pendientes:'Sin Marcar'
   };
@@ -4625,6 +4697,7 @@ function dcpExportarCambiosXLSX(){
   var S_ID   ={font:{name:'Calibri',sz:9,bold:true,color:{rgb:'5B21B6'}},fill:{fgColor:{rgb:'EDE9FE'},patternType:'solid'},border:bd,alignment:{horizontal:'center',vertical:'center'}};
   var S_CAR  ={font:{name:'Calibri',sz:9,bold:true,color:{rgb:'0369A1'}},fill:{fgColor:{rgb:'E0F2FE'},patternType:'solid'},border:bd,alignment:{horizontal:'center',vertical:'center'}};
   var S_NO   ={font:{name:'Calibri',sz:9,color:{rgb:'888888'}},          fill:{fgColor:{rgb:'FAFAFA'},patternType:'solid'},border:bd,alignment:{horizontal:'center',vertical:'center'}};
+  var S_MS   ={font:{name:'Calibri',sz:9,bold:true,color:{rgb:'047857'}},fill:{fgColor:{rgb:'D1FAE5'},patternType:'solid'},border:bd,alignment:{horizontal:'center',vertical:'center'}};
 
   // Columnas
   var cols = [
@@ -4639,7 +4712,8 @@ function dcpExportarCambiosXLSX(){
     {h:'Fecha Vencimiento',          key:'fechaVencimiento',  w:14},
     {h:'Estado',                     key:'estado',            w:16},
     {h:'Identidad Corporativa',      key:'cambioIdentidad',   w:20},
-    {h:'Cargos Gerente/Director',    key:'cambioCargos',      w:20}
+    {h:'Cargos Gerente/Director',    key:'cambioCargos',      w:20},
+    {h:'Aplica Multi-Sociedad',      key:'cambioMultiSociedad',w:20}
   ];
   var NC = cols.length;
 
@@ -4657,7 +4731,7 @@ function dcpExportarCambiosXLSX(){
 
   // Fila 2: Metadata
   var r2=[]; for(var ci=0;ci<NC;ci++) r2.push({v:'',t:'s',s:S_MVAL});
-  var mPairs=[['Código:','LM-0019'],['Versión:','00'],['Fecha:',fechaHoy],['Documentos:',String(filtrados.length)+' (inc. '+filtrados.filter(function(r){return r.esNuevo;}).length+' nuevos)']];
+  var mPairs=[['Código:','LM-0019'],['Versión:','00'],['Fecha:',fechaHoy],['Documentos:',String(filtrados.length)]];
   var mStep=Math.max(1,Math.floor(NC/mPairs.length));
   mPairs.forEach(function(p,mi){var c0=mi*mStep;if(c0<NC)r2[c0]={v:p[0],t:'s',s:S_MLBL};if(c0+1<NC)r2[c0+1]={v:p[1],t:'s',s:S_MVAL};});
   aoa.push(r2);
@@ -4677,6 +4751,10 @@ function dcpExportarCambiosXLSX(){
       if(c.key==='cambioCargos'){
         var v = d.cambioCargos==='SI' ? 'SI' : 'NO';
         return {v:v,t:'s',s:d.cambioCargos==='SI'?S_CAR:S_NO};
+      }
+      if(c.key==='cambioMultiSociedad'){
+        var v = d.cambioMultiSociedad==='SI' ? 'SI' : 'NO';
+        return {v:v,t:'s',s:d.cambioMultiSociedad==='SI'?S_MS:S_NO};
       }
       return {v:String(d[c.key]||''),t:'s',s:baseS};
     });
@@ -4748,10 +4826,11 @@ function dcpShowPaletteDoc(d){
       +(dcpFv(d.codigoAntiguo)?'<div style="font-size:9px;color:var(--tx3);margin-bottom:4px">Ant: '+d.codigoAntiguo+'</div>':'')
       +'<div class="dcp-det-name">'+d.descripcion+'</div>'
       +(dcpFv(d.descriptionEn)?'<div class="dcp-det-en">'+d.descriptionEn+'</div>':'')
-      +(d.cambioIdentidad==='SI'||d.cambioCargos==='SI'
+      +(d.cambioIdentidad==='SI'||d.cambioCargos==='SI'||d.cambioMultiSociedad==='SI'
         ?'<div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap">'
           +(d.cambioIdentidad==='SI'?'<span style="background:#ede9fe;color:#7c3aed;font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px">\uD83C\uDFE2 Identidad Corporativa</span>':'')
           +(d.cambioCargos==='SI'?'<span style="background:#e0f2fe;color:#0284c7;font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px">\uD83D\uDC54 Cargos</span>':'')
+          +(d.cambioMultiSociedad==='SI'?'<span style="background:#d1fae5;color:#059669;font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px">\uD83C\uDFEC Multi-Sociedad</span>':'')
           +'</div>'
         :'')
       +'<div class="dcp-status-row" style="margin-top:8px">'
@@ -4882,7 +4961,7 @@ function lmEsGxp(d){var v=String(d.docGxP||'').toUpperCase().trim();return v==='
 function lmPoblarAdministradores(){var sel=document.getElementById('lm-f-adm');if(!sel)return;var actual=sel.value,set={};(docsEmpresa()||[]).forEach(function(d){var a=(d.administrador||'').trim();if(a)set[a]=1;});var adms=Object.keys(set).sort();sel.innerHTML='<option value="">Administrador: Todos</option>';adms.forEach(function(a){var op=document.createElement('option');op.value=a;op.textContent=a;if(a===actual)op.selected=true;sel.appendChild(op);});}
 function lmFiltrar(){var q=((document.getElementById('lm-srch-nombre')||{}).value||'').toLowerCase().trim();var fMbr=((document.getElementById('lm-f-mbr')||{}).value||'');var fGxp=((document.getElementById('lm-f-gxp')||{}).value||'');var fAdm=((document.getElementById('lm-f-adm')||{}).value||'');var fEst=((document.getElementById('lm-f-est')||{}).value||'');var clr=document.getElementById('lm-srch-clear');if(clr)clr.style.display=q?'inline':'none';if(!q&&!fMbr&&!fGxp&&!fAdm&&!fEst){lmLimpiarResultados();return;}var hoy=new Date();hoy.setHours(0,0,0,0);var hMs=hoy.getTime();var res=(docsEmpresa()||[]).filter(function(d){if(q&&((d.codigoActual||'')+(d.descripcion||'')+(d.codigoAntiguo||'')).toLowerCase().indexOf(q)<0)return false;if(fMbr==='si'&&!lmEsMbr(d))return false;if(fMbr==='no'&&lmEsMbr(d))return false;if(fGxp==='si'&&!lmEsGxp(d))return false;if(fGxp==='no'&&lmEsGxp(d))return false;if(fAdm&&(d.administrador||'').trim()!==fAdm)return false;if(fEst){var di=d.fechaVencimiento?Math.round((new Date(d.fechaVencimiento+'T00:00:00').getTime()-hMs)/86400000):9999;var est=d.estado==='Obsoleto'?'Obsoleto':di<0?'Vencido':di<=30?'Por vencer':'Vigente';if(est!==fEst)return false;}return true;});res.sort(function(a,b){return(a.codigoActual||'').localeCompare(b.codigoActual||'');});var cnt=document.getElementById('lm-result-count');if(cnt)cnt.textContent=res.length+' resultado'+(res.length!==1?'s':'');lmRenderResultados(res);}
 function lmRenderResultados(lista){var cont=document.getElementById('lm-resultados');if(!cont)return;cont.style.display='block';if(!lista.length){cont.innerHTML='<div style="text-align:center;padding:20px;color:var(--tx3);font-size:12px">Sin documentos que coincidan</div>';return;}var hoy=new Date();hoy.setHours(0,0,0,0);var hMs=hoy.getTime();var frag=document.createDocumentFragment();lista.slice(0,200).forEach(function(d){var di=d.fechaVencimiento?Math.round((new Date(d.fechaVencimiento+'T00:00:00').getTime()-hMs)/86400000):null;var estC=d.estado==='Obsoleto'?'#A32D2D':di===null?'var(--tx3)':di<0?'#A32D2D':di<=30?'#854F0B':'#0F6E56';var estL=d.estado==='Obsoleto'?'Obsoleto':di===null?'—':di<0?'Vencido':di<=30?'Por vencer':'Vigente';var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);cursor:pointer;border-bottom:1px solid var(--brd)';row.onmouseover=function(){this.style.background='var(--bg3)';};row.onmouseout=function(){this.style.background='';};row.onclick=function(){lmSeleccionar(d.id);};var cd=document.createElement('div');cd.style.cssText='min-width:110px;font-family:monospace;font-size:11px;font-weight:700;color:var(--T3)';cd.textContent=d.codigoActual;var nd=document.createElement('div');nd.style.cssText='flex:1;font-size:12px;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap';nd.title=d.descripcion;nd.textContent=d.descripcion;var st=document.createElement('span');st.style.cssText='font-size:10px;color:'+estC+';font-weight:600;white-space:nowrap;flex-shrink:0';st.textContent=estL;var bd=document.createElement('div');bd.style.cssText='display:flex;gap:5px;flex-shrink:0';var bE=document.createElement('button');bE.className='btn gh sm';bE.style.cssText='font-size:10px;padding:3px 9px';bE.textContent='Editar';bE.onclick=function(e){e.stopPropagation();editDoc(d.id);};var bV=document.createElement('button');bV.className='btn sm';bV.style.cssText='font-size:10px;padding:3px 9px';bV.textContent='Ver';bV.onclick=function(e){e.stopPropagation();lmSeleccionar(d.id);};bd.appendChild(bE);bd.appendChild(bV);// Badges de cambios aplicados
-if(d.cambioIdentidad==='SI'||d.cambioCargos==='SI'){
+if(d.cambioIdentidad==='SI'||d.cambioCargos==='SI'||d.cambioMultiSociedad==='SI'){
   var bgs=document.createElement('div');
   bgs.style.cssText='display:flex;gap:3px;flex-shrink:0';
   if(d.cambioIdentidad==='SI'){
@@ -4896,6 +4975,12 @@ if(d.cambioIdentidad==='SI'||d.cambioCargos==='SI'){
     bCar.style.cssText='background:#e0f2fe;color:#0284c7;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;white-space:nowrap';
     bCar.textContent='👔 Cargos';
     bgs.appendChild(bCar);
+  }
+  if(d.cambioMultiSociedad==='SI'){
+    var bMs=document.createElement('span');
+    bMs.style.cssText='background:#d1fae5;color:#059669;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;white-space:nowrap';
+    bMs.textContent='🏬 Multi-Soc.';
+    bgs.appendChild(bMs);
   }
   row.appendChild(cd);row.appendChild(nd);row.appendChild(bgs);row.appendChild(st);row.appendChild(bd);
 } else {
@@ -5122,13 +5207,103 @@ function onCod() {
   el.setSelectionRange(pos, pos);
   document.getElementById('d-tipo').value = detTipo(el.value);
 }
+
+// ── Traducción masiva a PT ────────────────────────────────────────────────────
+// Traduce todos los docs que no tienen descriptionPt usando el mismo servicio
+// de traducción (MyMemory, sin API key) que ya usan los reportes Excel/PDF.
+async function traducirTodosPT(){
+  var pendientes=(docs||[]).filter(function(d){
+    return !d.descriptionPt&&(d.descripcion||d.descriptionEn);
+  });
+  if(!pendientes.length){toast('✅ Todos los documentos ya tienen traducción al PT','ok');return;}
+  if(!confirm('Traducir '+pendientes.length+' documentos al portugu\u00e9s.\n\nEsto puede tardar varios minutos seg\u00fan la cantidad.\n\u00bfContinuar?')) return;
+
+  var bar=document.getElementById('tp-progress-bar');
+  var lbl=document.getElementById('tp-progress-lbl');
+  var btn=document.getElementById('tp-btn');
+  if(bar){bar.style.display='block';bar.value=0;bar.max=pendientes.length;}
+  if(lbl){lbl.style.display='block';lbl.textContent='0 / '+pendientes.length;}
+  if(btn){btn.disabled=true;btn.textContent='⏳ Traduciendo...';}
+
+  // Recopilar textos únicos (evita traducir la misma descripción varias veces)
+  // y traducir todo en un solo lote — traducirTextosAPI ya traduce en paralelo.
+  var textosUnicos={};
+  pendientes.forEach(function(d){
+    var src=(d.descripcion||d.descriptionEn||'').trim();
+    if(src) textosUnicos[src]=true;
+  });
+  var textList=Object.keys(textosUnicos);
+
+  var tMap={};
+  try{
+    tMap=await traducirTextosAPI(textList,'pt','Traduciendo ');
+  }catch(e){ console.warn('[TPT] error general:',e); }
+
+  var ok=0;
+  pendientes.forEach(function(d,i){
+    var src=(d.descripcion||d.descriptionEn||'').trim();
+    var vLimpio=limpiarTextoExcel(src);
+    var t=tMap[src]||tMap[vLimpio];
+    if(t){ d.descriptionPt=t; ok++; }
+    if(bar) bar.value=i+1;
+  });
+  saveDocs(docs);
+
+  if(bar)bar.style.display='none';
+  if(lbl)lbl.style.display='none';
+  if(btn){btn.disabled=false;btn.textContent='🌐 Traducir todos al PT';}
+  toast('✅ '+ok+' / '+pendientes.length+' documentos traducidos al portugués','ok');
+}
+
 function onDesc() {
   var el = document.getElementById('d-desc');
   var v = toTP(el.value);
   var pos = el.selectionStart;
   el.value = v;
   el.setSelectionRange(pos, pos);
-  document.getElementById('d-desen').value = autoTr(v);
+  var enEl=document.getElementById('d-desen');
+  var ptEl=document.getElementById('d-despt');
+  // Traducción instantánea con el diccionario local (no depende de internet,
+  // por eso funciona aunque la red de la empresa bloquee servicios externos).
+  if(enEl) enEl.value = traducirLocal(v,'en');
+  if(ptEl) ptEl.value = traducirLocal(v,'pt');
+  docProgramarAutoTraduccion(v);
+}
+
+// Intenta mejorar la traducción instantánea usando el servicio en línea
+// (mejor calidad) mientras el usuario deja de escribir. Si no hay internet
+// o el servicio no responde, la traducción del diccionario local ya
+// mostrada se queda tal cual — nunca se borra ni se deja en blanco.
+var _descAutoTrTimer=null;
+function docProgramarAutoTraduccion(v){
+  clearTimeout(_descAutoTrTimer);
+  v=(v||'').trim();
+  if(!v) return;
+  _descAutoTrTimer=setTimeout(function(){ docAutoTraducirDescripcion(v); }, 700);
+}
+
+async function docAutoTraducirDescripcion(v){
+  var descEl=document.getElementById('d-desc');
+  var enEl=document.getElementById('d-desen');
+  var ptEl=document.getElementById('d-despt');
+  if(!descEl) return;
+
+  var resultados = await Promise.all([
+    enEl ? traducirTextosAPI([v],'en').catch(function(){return{};}) : Promise.resolve({}),
+    ptEl ? traducirTextosAPI([v],'pt').catch(function(){return{};}) : Promise.resolve({})
+  ]);
+  var vLimpio=limpiarTextoExcel(v);
+  var tEn=resultados[0][v]||resultados[0][vLimpio];
+  var tPt=resultados[1][v]||resultados[1][vLimpio];
+
+  // Solo mejorar si el usuario no siguió escribiendo mientras tanto.
+  // Si el servicio en línea no respondió, se deja la traducción local
+  // (ya visible desde onDesc) — nunca queda vacío ni se muestra error.
+  var sigueVigente = descEl.value.trim()===v;
+  if(sigueVigente){
+    if(enEl && tEn) enEl.value=tEn;
+    if(ptEl && tPt) ptEl.value=tPt;
+  }
 }
 function onArea() {
   var area = document.getElementById('d-area').value;
@@ -5206,7 +5381,7 @@ document.addEventListener('click',function(e){
 function openNewDoc() {
   document.getElementById('d-eid').value = '';
   document.getElementById('mo-doc-t').textContent = 'Nuevo documento';
-  var ids = ['d-cod','d-desc','d-desen','d-ver','d-tipo','d-tpl','d-proc','d-adm','d-lid','d-cor','d-aapl','d-drel','d-ext'];
+  var ids = ['d-cod','d-desc','d-desen','d-despt','d-ver','d-tipo','d-tpl','d-proc','d-adm','d-lid','d-cor','d-aapl','d-drel','d-ext'];
   ids.forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   // Limpiar dropdown multi-empresa
   ['d-alc','d-inter'].forEach(function(id){
@@ -5294,6 +5469,7 @@ function _saveDocOriginal() {
   var data = {
     codigoActual:cod, codigoAntiguo:document.getElementById('d-codant').value||'No Aplica',
     descripcion:desc, descriptionEn:document.getElementById('d-desen').value,
+    descriptionPt:document.getElementById('d-despt')?document.getElementById('d-despt').value:'',
     version:document.getElementById('d-ver').value, tipoDocumento:document.getElementById('d-tipo').value,
     tipoPlantilla:document.getElementById('d-tpl').value, areaGeneradora:document.getElementById('d-area').value,
     proceso:document.getElementById('d-proc').value, idioma:document.getElementById('d-idioma').value,
@@ -5368,19 +5544,22 @@ function _saveDocOriginal() {
   } else {
     var _cUsr = currentUser?currentUser.nombre||currentUser.login:'Sistema';
     var _cHistorial = [{f:fTS(new Date()), c:'Creación del documento v'+data.version, u:_cUsr}];
-    // Heredar cambioIdentidad / cambioCargos de solicitudes de Ruta de Borrador
+    // Heredar cambioIdentidad / cambioCargos / cambioMultiSociedad de solicitudes de RB
     // para que el doc nazca ya marcado si RB lo tenía registrado
     var _cambiosHeredados = _cambioHeredarDeSolicitudes(cod);
     if(_cambiosHeredados.cambioIdentidad==='SI')
       data.cambioIdentidad='SI';
     if(_cambiosHeredados.cambioCargos==='SI')
       data.cambioCargos='SI';
+    if(_cambiosHeredados.cambioMultiSociedad==='SI')
+      data.cambioMultiSociedad='SI';
     docs.push(Object.assign({id:Date.now()}, data, {historial:_cHistorial, flujo:null}));
     logA(_cUsr,'Creacion',cod+' - '+desc
       +(_cambiosHeredados.cambioIdentidad==='SI'?' [↓ Identidad Corporativa heredado de RB]':'')
-      +(_cambiosHeredados.cambioCargos==='SI'?' [↓ Cargos heredado de RB]':''));
+      +(_cambiosHeredados.cambioCargos==='SI'?' [↓ Cargos heredado de RB]':'')
+      +(_cambiosHeredados.cambioMultiSociedad==='SI'?' [↓ Multi-Sociedad heredado de RB]':''));
     toast('Documento creado'
-      +(_cambiosHeredados.cambioIdentidad==='SI'||_cambiosHeredados.cambioCargos==='SI'
+      +(_cambiosHeredados.cambioIdentidad==='SI'||_cambiosHeredados.cambioCargos==='SI'||_cambiosHeredados.cambioMultiSociedad==='SI'
         ?' — cambios de RB heredados automáticamente':''));
     window._docEmailCtx={accion:'creacion', verAnterior:'', verNueva: data.version};
   }
@@ -5424,11 +5603,12 @@ function editDoc(id) {
   document.getElementById('d-eid').value = id;
   document.getElementById('mo-doc-t').textContent = 'Editar documento';
   window._docEmailCtx={accion:'edicion', verAnterior:d.version||'', verNueva:d.version||''};
-  var map = {cod:'codigoActual',codant:'codigoAntiguo',desc:'descripcion',desen:'descriptionEn',ver:'version',tipo:'tipoDocumento',tpl:'tipoPlantilla',proc:'proceso',idioma:'idioma',fvig:'fechaVigencia',ext:'extensionVigencia',obs:'obsoleto',adm:'administrador',lid:'liderProceso',cor:'correoElectronico',alc:'alcanceEmpresas',aapl:'areasAplicables',drel:'docsRelacionados'};
+  var map = {cod:'codigoActual',codant:'codigoAntiguo',desc:'descripcion',desen:'descriptionEn',despt:'descriptionPt',ver:'version',tipo:'tipoDocumento',tpl:'tipoPlantilla',proc:'proceso',idioma:'idioma',fvig:'fechaVigencia',ext:'extensionVigencia',obs:'obsoleto',adm:'administrador',lid:'liderProceso',cor:'correoElectronico',alc:'alcanceEmpresas',aapl:'areasAplicables',drel:'docsRelacionados'};
   for (var k in map) { var el = document.getElementById('d-'+k); if (el) el.value = d[map[k]] || ''; }
   // Re-generar traduccion si no existe o forzar desde descripcion actual
   var descEl = document.getElementById('d-desc');
   var denEl  = document.getElementById('d-desen');
+  var dptEl  = document.getElementById('d-despt');
   if (descEl && denEl && (!denEl.value || denEl.value.trim()==='' || denEl.value===descEl.value)) {
     denEl.value = autoTr(toTP(descEl.value));
   }
@@ -5580,7 +5760,20 @@ function renderVenc() {
   document.getElementById('vp').textContent = p.length;
   document.getElementById('vg').textContent = g.length;
   var f = (document.getElementById('fv')||{}).value || 't';
-  var lista = f==='v'?v:f==='p'?p:f==='g'?g:v.concat(p).concat(g);
+  var listaRaw = f==='v'?v:f==='p'?p:f==='g'?g:v.concat(p).concat(g);
+  // Ordenar: documentos que pueden recibir extensión de vigencia van primero
+  var lista = listaRaw.slice().sort(function(a,b){
+    var diA=dH(a.fechaVencimiento), diB=dH(b.fechaVencimiento);
+    var extA=(a.extensionVigencia||'').trim().toUpperCase();
+    var extB=(b.extensionVigencia||'').trim().toUpperCase();
+    var tieneExtA=(extA==='X'||extA==='SI'||extA==='SÍ'||(extA&&extA!=='NO'&&extA!==''));
+    var tieneExtB=(extB==='X'||extB==='SI'||extB==='SÍ'||(extB&&extB!=='NO'&&extB!==''));
+    var pA=diA<0&&!(a.codigoActual&&a.codigoActual.toUpperCase().indexOf('F-')===0)&&!(a.codigoActual&&a.codigoActual.toUpperCase().indexOf('PRG-')===0)&&a.estado!=='Obsoleto'&&!tieneExtA&&Math.abs(diA)<=365;
+    var pB=diB<0&&!(b.codigoActual&&b.codigoActual.toUpperCase().indexOf('F-')===0)&&!(b.codigoActual&&b.codigoActual.toUpperCase().indexOf('PRG-')===0)&&b.estado!=='Obsoleto'&&!tieneExtB&&Math.abs(diB)<=365;
+    if(pA&&!pB) return -1;
+    if(!pA&&pB) return 1;
+    return 0; // mantiene orden original dentro de cada grupo
+  });
   var frag = document.createDocumentFragment();
   lista.forEach(function(d) {
     var di = dH(d.fechaVencimiento); var r = document.createElement('tr');
@@ -8552,7 +8745,7 @@ function expExcel(){
   toast('✅ Archivo descargado: '+fileName+'. Cópialo a: \\\\elara\\SistDoc-Intranet\\Listado\\PROCAPS (reemplaza el anterior)','if');
 }
 function expCSV(){
-  var cols=['codigoActual','codigoAntiguo','descripcion','descriptionEn','version','tipoDocumento','areaGeneradora','fechaVigencia','fechaVencimiento','estado','idioma','extensionVigencia','obsoleto','administrador','liderProceso','alcanceEmpresas','mbr','tipoPlantilla','docsRelacionados','docGxP','docIntercompania','areasAplicables','proceso','correoElectronico'];
+  var cols=['codigoActual','codigoAntiguo','descripcion','descriptionEn','descriptionPt','version','tipoDocumento','areaGeneradora','proceso','fechaVigencia','fechaVencimiento','extensionVigencia','estado','obsoleto','administrador','liderProceso','correoElectronico','alcanceEmpresas','areasAplicables','idioma','docGxP','docsRelacionados','mbr','tipoPlantilla','docIntercompania'];
   var hdr=['Codigo Actual','Codigo Antiguo','Descripcion','Description','Version','Tipo De Documento','Area Generadora','Fecha De Vigencia','Fecha De Vencimiento2','Estado','Idioma','Extension De Vigencia','Obsoleto','Administrador','Lider De Proceso','Alcance A Empresas','Mbr','Tipo De Plantilla','Documentos Relacionados','Doc.Gxp','Doc.Intercompania','Areas Aplicables','Proceso','Correo Electronico'];
   var rows=[hdr].concat(docs.map(function(d){return cols.map(function(c){return d[c]||'';});}));
   var csv=rows.map(function(r){return r.map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
@@ -8614,6 +8807,7 @@ function procXLS(file){
         codigoAntiguo:   ['codigo antiguo','cod antiguo'],
         descripcion:     ['descripcion','nombre','description es'],
         descriptionEn:   ['description','description en'],
+        descriptionPt:   ['descricao pt','descricao','description pt','descrição pt','descrição'],
         version:         ['version','ver','rev'],
         tipoDocumento:   ['tipo de documento','tipo documento','tipo'],
         areaGeneradora:  ['area generadora','area generadora','area','departamento'],
@@ -8651,6 +8845,23 @@ function procXLS(file){
           if(found!==null){colIdx[campo]=found;break;}
         }
       }
+
+      // FALLBACK POSICIONAL: para columnas sin encabezado (D=descriptionEn, E=descriptionPt)
+      // COLUMNAS_CLAVE define el orden exacto del Excel — usarlo como posición fija
+      // cuando CMAP no encontró la columna por nombre de encabezado.
+      var CLAVE_POSICIONES=OD&&OD.COLUMNAS_CLAVE?OD.COLUMNAS_CLAVE:[
+        'codigoActual','codigoAntiguo','descripcion','descriptionEn','descriptionPt','version',
+        'tipoDocumento','areaGeneradora','proceso','fechaVigencia','fechaVencimiento',
+        'extensionVigencia','estado','obsoleto','administrador',
+        'liderProceso','correoElectronico','alcanceEmpresas','areasAplicables','idioma',
+        'docGxP','docsRelacionados','mbr','tipoPlantilla','docIntercompania'
+      ];
+      CLAVE_POSICIONES.forEach(function(campo,posicion){
+        // Solo aplicar si CMAP no detectó este campo por nombre
+        if(colIdx[campo]===undefined||colIdx[campo]===null){
+          colIdx[campo]=posicion; // usar posición como índice de columna
+        }
+      });
 
       //  Función para leer celda como string preservando el valor original 
       function getCellStr(row, colNum) {
@@ -8768,6 +8979,7 @@ function procXLS(file){
           codigoAntiguo:    getCellStr(row,colIdx.codigoAntiguo) || 'No Aplica',
           descripcion:      desc || ('Documento '+row),
           descriptionEn:    getCellStr(row,colIdx.descriptionEn),
+          descriptionPt:    getCellStr(row,colIdx.descriptionPt),
           version:          (function(){var v=getCellStr(row,colIdx.version);return v!==''?v:'01';})(),
           tipoDocumento:    (function(){var t=getCellStr(row,colIdx.tipoDocumento);var cod=getCellStr(row,colIdx.codigoActual);return(t&&t.trim())?t:nTipo(cod);})(),
           tipoPlantilla:    getCellStr(row,colIdx.tipoPlantilla),
@@ -9416,12 +9628,31 @@ function evSelDoc(id){
     document.getElementById('ev-sel-cod').textContent=d.codigoActual;
     document.getElementById('ev-sel-desc').textContent=d.descripcion;
     document.getElementById('ev-sel-info').innerHTML='Vigencia: <strong>'+d.fechaVigencia+'</strong> | Vencimiento: <strong style="color:var(--R)">'+d.fechaVencimiento+'</strong> '+vencInfo;
-    // Suggest new date: +1 year from vencimiento or from today if already expired
-    var base=di<0?new Date():new Date(d.fechaVencimiento+'T12:00:00');
-    base.setFullYear(base.getFullYear()+1);
-    var sug=fD(base);
-    document.getElementById('ev-nueva-fecha').value=sug;
-    document.getElementById('ev-nueva-preview').textContent=sug;
+    // Nueva fecha = vencimiento + 1 año exacto
+    // Siempre desde fechaVencimiento, nunca desde hoy.
+    // Se parsea manualmente (YYYY-MM-DD) para evitar ambigüedades de zona horaria.
+    var sug='';
+    var fv=d.fechaVencimiento||'';
+    var mFV=fv.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(mFV){
+      var yr=parseInt(mFV[1])+1;  // año + 1
+      var mo=mFV[2];               // mismo mes
+      var dy=mFV[3];               // mismo día
+      sug=yr+'-'+mo+'-'+dy;
+    } else {
+      // Fallback: si el formato es inesperado, intentar con Date
+      try{
+        var base2=new Date(fv+'T12:00:00');
+        if(!isNaN(base2.getTime())){
+          base2.setFullYear(base2.getFullYear()+1);
+          sug=fD(base2);
+        }
+      }catch(e2){}
+    }
+    if(sug){
+      document.getElementById('ev-nueva-fecha').value=sug;
+      document.getElementById('ev-nueva-preview').textContent=sug;
+    }
   }
   document.getElementById('ev-q').value=d.codigoActual;
   var qSec=document.getElementById('ev-quitar-section');
@@ -15157,20 +15388,18 @@ var OD = {
   saveTimer:     null,
   SYNC_INTERVAL: 60000,   // auto-guardar cada 60s
   COLUMNAS_EXCEL: [
-    'Código Actual','Código Antiguo','Descripción','Description','Versión',
-    'Tipo De Documento','Área Generadora','Fecha De Vigencia','Fecha De Vencimiento2',
-    'Estado','Idioma','Extension De Vigencia','Obsoleto','Administrador',
-    'Lider De Proceso','Alcance A Empresas','Mbr','Tipo De Plantilla',
-    'Documentos Relacionados','Doc.Gxp','Doc.Intercompañia','Áreas Aplicables','Proceso',
-    'Historial_Cambios','Correo Electrónico'
+    'Código Actual','Código Antiguo','Descripción','Description','Descrição (PT)','Versión',
+    'Tipo De Documento','Área Generadora','Proceso','Fecha De Vigencia','Fecha De Vencimiento2',
+    'Extension De Vigencia','Estado','Obsoleto','Administrador',
+    'Lider De Proceso','Correo Electrónico','Alcance A Empresas','Áreas Aplicables','Idioma',
+    'Doc.Gxp','Documentos Relacionados','Mbr','Tipo De Plantilla','Doc.Intercompañia'
   ],
   COLUMNAS_CLAVE: [
-    'codigoActual','codigoAntiguo','descripcion','descriptionEn','version',
-    'tipoDocumento','areaGeneradora','fechaVigencia','fechaVencimiento',
-    'estado','idioma','extensionVigencia','obsoleto','administrador',
-    'liderProceso','alcanceEmpresas','mbr','tipoPlantilla',
-    'docsRelacionados','docGxP','docIntercompania','areasAplicables','proceso',
-    '_historialTexto','correoElectronico'
+    'codigoActual','codigoAntiguo','descripcion','descriptionEn','descriptionPt','version',
+    'tipoDocumento','areaGeneradora','proceso','fechaVigencia','fechaVencimiento',
+    'extensionVigencia','estado','obsoleto','administrador',
+    'liderProceso','correoElectronico','alcanceEmpresas','areasAplicables','idioma',
+    'docGxP','docsRelacionados','mbr','tipoPlantilla','docIntercompania'
   ]
 };
 
@@ -16564,6 +16793,22 @@ function odLeerHojaUsuarios(ws){
 }
 
 //  LEER EXCEL COMPLETO 
+// Corrige un bug frecuente de Excel/XLSX: cuando una celda tuvo saltos de
+// línea internos, a veces la secuencia de escape "_x000D_" (retorno de
+// carro) queda sin decodificar y aparece como texto literal repetido
+// cientos de veces dentro del campo (ej. en Descripción o Código Anterior).
+// Esto ensucia el nombre del documento y además rompe la traducción por
+// lote (cada aparición se cuenta como más "contenido" del que realmente
+// hay). Se limpia aquí, en el punto de lectura, para que tanto la
+// visualización en la app como las exportaciones (Excel/PDF, traducidas
+// o no) siempre reciban el texto real y limpio.
+function limpiarTextoExcel(v){
+  if(typeof v!=='string') return v;
+  return v.replace(/(_x000[dD]_)+/g,' ')
+          .replace(/[\r\n\t]+/g,' ')
+          .replace(/\s{2,}/g,' ')
+          .trim();
+}
 async function odCargarListado(){
   console.log('[OD] odCargarListado iniciado. carpetaHandle:',!!OD.carpetaHandle,'fileHandle:',!!OD.fileHandle);
   if(window._odCargando){ console.warn('OD: Carga ya en progreso, ignorando llamada duplicada'); return; }
@@ -16644,21 +16889,22 @@ async function odCargarListado(){
     var MAPA={
       'Código Actual':'codigoActual','Codigo Actual':'codigoActual',
       'Código Antiguo':'codigoAntiguo','Codigo Antiguo':'codigoAntiguo',
+      'Código Anterior':'codigoAntiguo','Codigo Anterior':'codigoAntiguo',
       'Descripción':'descripcion','Descripcion':'descripcion',
-      'Description':'descriptionEn','Versión':'version','Version':'version',
+      'Description':'descriptionEn','Descri\u00e7\u00e3o (PT)':'descriptionPt','Vers\u00f3n':'version','Version':'version','Versión':'version',
       'Tipo De Documento':'tipoDocumento','Tipo de Documento':'tipoDocumento',
       'Área Generadora':'areaGeneradora','Area Generadora':'areaGeneradora',
       'Fecha De Vigencia':'fechaVigencia','Fecha de Vigencia':'fechaVigencia',
-      'Fecha De Vencimiento2':'fechaVencimiento','Fecha De Vencimiento':'fechaVencimiento',
+      'Fecha De Vencimiento2':'fechaVencimiento','Fecha De Vencimiento':'fechaVencimiento','Fecha de Vencimiento':'fechaVencimiento',
       'Estado':'estado','Idioma':'idioma',
-      'Extension De Vigencia':'extensionVigencia','Extensión De Vigencia':'extensionVigencia',
+      'Extension De Vigencia':'extensionVigencia','Extensión De Vigencia':'extensionVigencia','Extensión de Vigencia':'extensionVigencia',
       'Obsoleto':'obsoleto','Administrador':'administrador',
-      'Lider De Proceso':'liderProceso','Líder De Proceso':'liderProceso',
-      'Alcance A Empresas':'alcanceEmpresas','Mbr':'mbr','MBR':'mbr',
-      'Tipo De Plantilla':'tipoPlantilla','Tipo de Plantilla':'tipoPlantilla',
+      'Lider De Proceso':'liderProceso','Líder De Proceso':'liderProceso','Líder de Proceso':'liderProceso',
+      'Alcance A Empresas':'alcanceEmpresas','Alcance Empresas':'alcanceEmpresas','Mbr':'mbr','MBR':'mbr',
+      'Tipo De Plantilla':'tipoPlantilla','Tipo de Plantilla':'tipoPlantilla','Tipo Plantilla':'tipoPlantilla',
       'Documentos Relacionados':'docsRelacionados',
       'Doc.Gxp':'docGxP','Doc.GxP':'docGxP','Doc. GxP':'docGxP',
-      'Doc.Intercompañia':'docIntercompania','Doc. Intercompañia':'docIntercompania',
+      'Doc.Intercompañia':'docIntercompania','Doc. Intercompañia':'docIntercompania','Doc. Intercompañía':'docIntercompania',
       'Áreas Aplicables':'areasAplicables','Areas Aplicables':'areasAplicables',
       'Proceso':'proceso',
       'Correo':'correoElectronico','Correo Electrónico':'correoElectronico',
@@ -16685,6 +16931,7 @@ async function odCargarListado(){
           var pts=val.split('/');
           if(pts.length===3) val=(pts[2].length===4?pts[2]:'20'+pts[2])+'-'+pts[1].padStart(2,'0')+'-'+pts[0].padStart(2,'0');
         }
+        if(typeof val==='string' && clave!=='_historialTexto') val=limpiarTextoExcel(val);
         // Versión siempre como string (0 numérico → '0', no '')
         if(clave==='version') val=String(val);
         obj[clave]=val; tieneVal=true;
@@ -17318,17 +17565,17 @@ async function odGuardarListado(silencioso){
     }
 
     // Columnas de fecha (índices 0-based en COLUMNAS_CLAVE)
-    var COLS_FECHA={7:true, 8:true}; // H=fechaVigencia, I=fechaVencimiento
+    var COLS_FECHA={9:true, 10:true}; // J=fechaVigencia, K=fechaVencimiento
 
     // PASO 1: Borrar SOLO las celdas de datos (filas 2 en adelante)
     // que corresponden a nuestras columnas (incluyendo J, que se reescribirá con fórmula).
     var nuestrasCols={}; // índice columna 0-based → true
     OD.COLUMNAS_CLAVE.forEach(function(_,ci){ nuestrasCols[ci]=true; });
     nuestrasCols[9]=true; // columna J también se reescribe con fórmula
-    // Columna Y (índice 24 = correoElectronico): NO borrar automáticamente
+    // Columna Q (índice 16 = correoElectronico): NO borrar automáticamente
     // Solo se escribe si el documento tiene correo asignado
     // Esto preserva correos del Excel que no se hayan cargado en memoria
-    delete nuestrasCols[24];
+    delete nuestrasCols[16];
 
     Object.keys(wsLM).forEach(function(addr){
       if(addr[0]==='!') return;
@@ -17346,9 +17593,9 @@ async function odGuardarListado(silencioso){
 
     // PASO 2: Escribir encabezados fila 1 (solo nuestras columnas, excepto J)
     OD.COLUMNAS_EXCEL.forEach(function(h, ci){
-      if(ci===9) return; // no tocar J1
+      if(!h) return; // no escribir encabezados vacíos (cols D y E sin título)
       var addr=XLSX.utils.encode_cell({r:0,c:ci});
-      if(!wsLM[addr]) wsLM[addr]={v:h,t:'s'}; // solo si no existe
+      if(!wsLM[addr]) wsLM[addr]={v:h,t:'s'}; // solo si no existe ya un encabezado
     });
 
     function calcEstadoParaExcel(d){var obs=String(d.obsoleto||"").toUpperCase().trim();var esObs=obs==="X"||obs==="SI"||obs==="SÍ"||d.estado==="Obsoleto";return esObs?"Obsoleto":calcEst(d.fechaVencimiento,esObs?"X":"No");}
@@ -17359,12 +17606,12 @@ async function odGuardarListado(silencioso){
       var excelRow=row+1; // número fila Excel
 
       OD.COLUMNAS_CLAVE.forEach(function(col, ci){
-        if(ci===9) return; // col J: se maneja aparte
+        // ci===10 = fechaVencimiento: se escribe como texto fecha (ya no es fórmula)
 
         var addr=XLSX.utils.encode_cell({r:row,c:ci});
 
-        // Columna E (índice 4) = Versión → guardar como número con 2 decimales
-        if(ci===4){
+        // Columna F (índice 5) = Versión → guardar como número con 2 decimales
+        if(ci===5){
           var verRaw=String(d[col]!==null&&d[col]!==undefined?d[col]:'').trim();
           var verNum=parseFloat(verRaw);
           if(!isNaN(verNum)){
@@ -17375,30 +17622,20 @@ async function odGuardarListado(silencioso){
           return;
         }
 
-        // Columna X (índice 23) = Historial_Cambios
-        if(ci===23){
-          var h=d.historial;
-          var txt=(h&&h.length)
-            ? h.filter(function(e){return e&&e.c&&String(e.c).trim();}).map(function(e){return '['+e.f+'] '+(e.u||'Sistema')+': '+(e.c||'');}).join('\n')
-            : '';
-          // Excel: máximo 32767 chars por celda — truncar por el inicio (entradas más antiguas)
-          if(txt.length>32700){
-            txt=txt.slice(txt.length-32700);
-            var nl=txt.indexOf('\n');
-            if(nl>0) txt=txt.slice(nl+1); // empezar en línea completa
-            txt='[...historial truncado]\n'+txt;
-          }
-          wsLM[addr]={v:txt,t:'s'};
-          return;
-        }
+        // Historial de cambios: ya no se escribe al Excel (no hay columna para eso)
+        // Se guarda solo en memoria (d.historial) y se exporta vía botones de descarga
 
         var val=d[col];
         if(val===null||val===undefined) val='';
         if(typeof val==='object') val='';
 
-        // Columna Y (correoElectronico, índice 24):
-        // Solo escribir si tiene valor — si no, preservar lo que hay en el Excel
-        if(ci===24 && !String(val).trim()) return;
+        // Proteger campos clave: si el valor en memoria está vacío,
+        // NO borrar lo que tiene el Excel — preservar el original
+        if(!String(val).trim()){
+          if(ci===1)  return; // codigoAntiguo
+          if(ci===15) return; // liderProceso
+          if(ci===16) return; // correoElectronico
+        }
 
         // Columnas de fecha → guardar como texto ISO YYYY-MM-DD
         // Nota: escribir como texto evita problemas de locale en Excel/XLSX
@@ -17416,15 +17653,14 @@ async function odGuardarListado(silencioso){
         wsLM[addr]={v:strVal,t:'s'};
       });
 
-      // Columna J: siempre insertar/actualizar la fórmula
-      // Si ya existía una celda original la reemplazamos con la fórmula actualizada
-      // (el número de fila puede haber cambiado si se reordenaron documentos)
-      var addrJ=XLSX.utils.encode_cell({r:row,c:9});var _estJ=calcEstadoParaExcel(d);d.estado=_estJ;wsLM[addrJ]={v:_estJ,t:'s'};
+      // Recalcular y actualizar d.estado en memoria (para que la app lo muestre correctamente)
+      // El estado ya se escribe en la columna M (ci===12) dentro del loop anterior
+      d.estado = calcEstadoParaExcel(d);
     });
 
     // PASO 4: Actualizar !ref para cubrir todas las filas escritas
     var lastRow=docs.length; // 0-based
-    var lastCol=OD.COLUMNAS_CLAVE.length-1;
+    var lastCol=Math.max(OD.COLUMNAS_CLAVE.length-1, 24); // mínimo 25 columnas (A-Y)
     wsLM['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:lastRow,c:lastCol}});
     // wb.Sheets[wb.SheetNames[0]] ya apunta a wsLM (modificado in-place)
 
@@ -17615,9 +17851,9 @@ async function odGuardarListado(silencioso){
           var writableTarget;
           if(OD.carpetaHandle){
             var fhLM2=await OD.carpetaHandle.getFileHandle(OD_ARCHIVOS.lm,{create:false});
-            writableTarget=await fhLM2.createWritable();
+            writableTarget=await fhLM2.createWritable({keepExistingData:false}); // evita copias temporales
           } else {
-            writableTarget=await OD.fileHandle.createWritable();
+            writableTarget=await OD.fileHandle.createWritable({keepExistingData:false}); // evita copias temporales
           }
           await writableTarget.write(new Uint8Array(buf));
           await writableTarget.close();
@@ -19609,7 +19845,7 @@ window._selLM = null;
 function solicitarIdiomaListadoPDF(){
   if(!docs||!docs.length){toast('Sin documentos en el listado maestro','er');return;}
   window._selLM = null;
-  ['pdf-op-es','pdf-op-en'].forEach(function(id){
+  ['pdf-op-es','pdf-op-en','pdf-op-pt'].forEach(function(id){
     var el=document.getElementById(id);
     if(el){el.style.borderColor='var(--brd)';el.style.background='#fff';}
   });
@@ -19620,7 +19856,7 @@ function solicitarIdiomaListadoPDF(){
 
 function selIdiomaLM(lang){
   window._selLM = lang;
-  ['es','en'].forEach(function(l){
+  ['es','en','pt'].forEach(function(l){
     var el=document.getElementById('pdf-op-'+l);
     if(el){
       el.style.borderColor = l===lang ? 'var(--T)' : 'var(--brd)';
@@ -19635,12 +19871,14 @@ function generarListadoPDF(){
   var lang = window._selLM;
   if(!lang){toast('Selecciona un idioma','er');return;}
   closeMo('mo-pdf-idioma');
-  toast(lang==='es'?'Generando PDF del Listado Maestro...':'Generating Master Document List PDF...','if');
+  toast(lang==='es'?'Generando PDF del Listado Maestro...':lang==='pt'?'Gerando PDF da Lista Mestra...':'Generating Master Document List PDF...','if');
   setTimeout(function(){_buildListadoPDF(lang);},150);
 }
 
-function _buildListadoPDF(lang){
+async function _buildListadoPDF(lang){
   var es = lang==='es';
+  var pt = lang==='pt';
+  var en = lang==='en';
   var today = new Date();
   var dd  = String(today.getDate()).padStart(2,'0');
   var mm  = String(today.getMonth()+1).padStart(2,'0');
@@ -19670,36 +19908,66 @@ function _buildListadoPDF(lang){
     return;
   }
 
+  //  Traducción de contenido vía API (tipo de documento, proceso y, si no  
+  //  existe el campo nativo, la descripción) — para que TODO el documento  
+  //  quede en el idioma elegido, no solo los encabezados. 
+  var tMap={};
+  if(!es){
+    var textosUnicos={};
+    filtered.forEach(function(d){
+      ['tipoDocumento','proceso'].forEach(function(k){
+        var v=String(d[k]||'').trim();
+        if(v&&v.length>1) textosUnicos[v]=true;
+      });
+      if(pt && !d.descriptionPt && d.descripcion) textosUnicos[d.descripcion]=true;
+      if(en && !d.descriptionEn && d.descripcion) textosUnicos[d.descripcion]=true;
+    });
+    var textList=Object.keys(textosUnicos).filter(function(t){return t.length>1;});
+    if(textList.length){
+      toast(pt?'Traduzindo conteúdo do PDF...':'Translating PDF content...','if');
+      tMap = await traducirTextosAPI(textList, lang, pt?'Traduzindo lote ':'Translating batch ');
+    }
+  }
+
   //  Traducciones 
   var estadoEN={'Vigente':'Active','Menos de 15 días':'< 15 days','Menos de 1 Mes':'< 1 Month',
     'Menos de 2 Meses':'< 2 Months','Menos de 3 Meses':'< 3 Months',
     'Menos de 4 Meses':'< 4 Months','Menos de 5 Meses':'< 5 Months'};
+  var estadoPT={'Vigente':'Vigente','Menos de 15 días':'< 15 dias','Menos de 1 Mes':'< 1 Mês',
+    'Menos de 2 Meses':'< 2 Meses','Menos de 3 Meses':'< 3 Meses',
+    'Menos de 4 Meses':'< 4 Meses','Menos de 5 Meses':'< 5 Meses'};
+  var idiomaEN={E:'Spanish',S:'Spanish',I:'English',P:'Portuguese',B:'Bilingual'};
+  var idiomaPT={E:'Espanhol',S:'Espanhol',I:'Inglês',P:'Português',B:'Bilíngue'};
 
   //  Etiquetas según idioma 
   var L={
-    titulo:     es?'ADMINISTRACIÓN DEL SISTEMA DE DOCUMENTACIÓN':'DOCUMENTATION SYSTEM MANAGEMENT',
-    subtitulo:  es?'Listado Maestro de Documentos':'Master Document List',
-    codLbl:     es?'CÓDIGO:':'CODE:',
-    verLbl:     es?'VERSIÓN:':'VERSION:',
-    fechaLbl:   es?'Fecha Actualización:':'Update Date:',
-    pagLbl:     es?'Página':'Page',
-    deLbl:      es?'de':'of',
-    hCod:       es?'Código':'Code',
-    hDesc:      es?'Descripción':'Description',
-    hVer:       es?'Versión':'Version',
-    hFVig:      es?'Fecha Vigencia':'Effective Date',
-    hFVenc:     es?'Fecha Vencimiento':'Expiration Date',
-    hEst:       es?'Estado':'Status',
-    pie:        es?'DOCUMENTO PROPIEDAD DE PROCAPS S.A. PROHIBIDA SU REPRODUCCIÓN TOTAL O PARCIAL.':'DOCUMENT PROPERTY OF PROCAPS S.A. TOTAL OR PARTIAL REPRODUCTION PROHIBITED.',
-    histTit:    es?'HISTÓRICO DE CAMBIO':'CHANGE HISTORY',
-    hCodH:      es?'CÓDIGO':'CODE',
-    hVerH:      es?'VERSIÓN':'VERSION',
-    hFechaMod:  es?'FECHA DE MODIFICACIÓN':'MODIFICATION DATE',
-    hDescH:     es?'DESCRIPCIÓN':'DESCRIPTION',
-    histDescVal:es?'Actualización del listado maestro para la inclusión de nuevos documentos.':'Master document list update for inclusion of new documents.',
-    authResp:   es?'RESPONSABLE':'RESPONSIBLE',
-    authNom:    es?'NOMBRE':'NAME',
-    authCargo:  es?'CARGO / ROL':'POSITION / ROLE',
+    titulo:     es?'ADMINISTRACIÓN DEL SISTEMA DE DOCUMENTACIÓN':pt?'ADMINISTRAÇÃO DO SISTEMA DE DOCUMENTAÇÃO':'DOCUMENTATION SYSTEM MANAGEMENT',
+    subtitulo:  es?'Listado Maestro de Documentos':pt?'Lista Mestra de Documentos':'Master Document List',
+    codLbl:     es?'CÓDIGO:':pt?'CÓDIGO:':'CODE:',
+    verLbl:     es?'VERSIÓN:':pt?'VERSÃO:':'VERSION:',
+    fechaLbl:   es?'Fecha Actualización:':pt?'Data de Atualização:':'Update Date:',
+    pagLbl:     es?'Página':pt?'Página':'Page',
+    deLbl:      es?'de':pt?'de':'of',
+    hCod:       es?'Código':pt?'Código':'Code',
+    hDesc:      es?'Descripción':pt?'Descrição':'Description',
+    hVer:       es?'Versión':pt?'Versão':'Version',
+    hFVig:      es?'Fecha Vigencia':pt?'Data de Vigência':'Effective Date',
+    hFVenc:     es?'Fecha Vencimiento':pt?'Data de Vencimento':'Expiration Date',
+    hEst:       es?'Estado':pt?'Status':'Status',
+    hTipo:      es?'Tipo de Documento':pt?'Tipo de Documento':'Document Type',
+    hProc:      es?'Proceso':pt?'Processo':'Process',
+    hObs:       es?'Obsoleto':pt?'Obsoleto':'Obsolete',
+    hIdi:       es?'Idioma':pt?'Idioma':'Language',
+    pie:        es?'DOCUMENTO PROPIEDAD DE PROCAPS S.A. PROHIBIDA SU REPRODUCCIÓN TOTAL O PARCIAL.':pt?'DOCUMENTO PROPRIEDADE DA PROCAPS S.A. PROIBIDA SUA REPRODUÇÃO TOTAL OU PARCIAL.':'DOCUMENT PROPERTY OF PROCAPS S.A. TOTAL OR PARTIAL REPRODUCTION PROHIBITED.',
+    histTit:    es?'HISTÓRICO DE CAMBIO':pt?'HISTÓRICO DE ALTERAÇÕES':'CHANGE HISTORY',
+    hCodH:      es?'CÓDIGO':pt?'CÓDIGO':'CODE',
+    hVerH:      es?'VERSIÓN':pt?'VERSÃO':'VERSION',
+    hFechaMod:  es?'FECHA DE MODIFICACIÓN':pt?'DATA DE MODIFICAÇÃO':'MODIFICATION DATE',
+    hDescH:     es?'DESCRIPCIÓN':pt?'DESCRIÇÃO':'DESCRIPTION',
+    histDescVal:es?'Actualización del listado maestro para la inclusión de nuevos documentos.':pt?'Atualização da lista mestra para inclusão de novos documentos.':'Master document list update for inclusion of new documents.',
+    authResp:   es?'RESPONSABLE':pt?'RESPONSÁVEL':'RESPONSIBLE',
+    authNom:    es?'NOMBRE':pt?'NOME':'NAME',
+    authCargo:  es?'CARGO / ROL':pt?'CARGO / FUNÇÃO':'POSITION / ROLE',
     authFirma:  es?'FIRMA':'SIGNATURE',
     authFecha:  es?'FECHA':'DATE',
     auth1Resp:  es?'PREPARACIÓN':'PREPARATION',
@@ -19708,13 +19976,18 @@ function _buildListadoPDF(lang){
     auth2Cargo: es?'DIRECTORA SISTEMA DE GESTIÓN':'MANAGEMENT SYSTEM DIRECTOR',
   };
 
-  //  Columnas 
+  //  Columnas — se traducen tanto los encabezados como el contenido 
   var COLS=[
-    {w:0.11, key:'codigoActual',    lbl:L.hCod},
-    {w:0.52, key:'descripcion',     lbl:L.hDesc, useEn:true, fullText:true},
-    {w:0.08, key:'version',         lbl:L.hVer},
-    {w:0.145,key:'fechaVigencia',   lbl:L.hFVig},
-    {w:0.145,key:'fechaVencimiento',lbl:L.hFVenc},
+    {w:0.09, key:'codigoActual',    lbl:L.hCod},
+    {w:0.22, key:'descripcion',     lbl:L.hDesc, fullText:true},
+    {w:0.05, key:'version',         lbl:L.hVer},
+    {w:0.12, key:'tipoDocumento',   lbl:L.hTipo},
+    {w:0.12, key:'proceso',         lbl:L.hProc},
+    {w:0.09, key:'fechaVigencia',   lbl:L.hFVig},
+    {w:0.09, key:'fechaVencimiento',lbl:L.hFVenc},
+    {w:0.10, key:'estado',          lbl:L.hEst, isEstado:true},
+    {w:0.06, key:'obsoleto',        lbl:L.hObs},
+    {w:0.06, key:'idioma',          lbl:L.hIdi},
   ];
 
   //  Dimensiones página A4 landscape @ 96dpi → px 
@@ -19750,7 +20023,7 @@ function _buildListadoPDF(lang){
 
   //  Estado → color pill 
   function pillColor(raw){
-    var v=es?raw:(estadoEN[raw]||raw);
+    var v=es?raw:pt?(estadoPT[raw]||raw):(estadoEN[raw]||raw);
     var bg='#e6f9f3',fg='#0f7a50';
     if(raw==='Vencido'){bg='#fde8e8';fg='#a02020';}
     else if(raw==='Menos de 15 días'||raw==='Menos de 1 Mes'){bg='#fff3cd';fg='#856404';}
@@ -19933,7 +20206,27 @@ function _buildListadoPDF(lang){
         var col=COLS[ci2], cw4=colWidths[ci2];
         if(ci2>0) line(rx,y,rx,y+ROW_H,C.b2,0.4);
         var rawVal=String(d[col.key]||'');
-        if(!es && col.useEn && d.descriptionEn) rawVal=String(d.descriptionEn);
+        if(!es){
+          if(col.key==='descripcion'){
+            // Solo la descripción del idioma elegido: campo nativo si existe,
+            // si no, la traducción vía API. Nunca se mezcla con el otro idioma.
+            var _dv=limpiarTextoExcel(rawVal);
+            rawVal = pt ? (d.descriptionPt || tMap[rawVal] || tMap[_dv] || rawVal)
+                        : (d.descriptionEn || tMap[rawVal] || tMap[_dv] || rawVal);
+          } else if(col.key==='tipoDocumento' || col.key==='proceso'){
+            var _tv=limpiarTextoExcel(rawVal);
+            rawVal = tMap[rawVal] || tMap[_tv] || rawVal;
+          } else if(col.key==='obsoleto'){
+            var _ov=rawVal.trim().toUpperCase();
+            var _truthy=(_ov==='X'||_ov==='SI'||_ov==='SÍ'||_ov==='1'||_ov==='YES'||_ov==='SIM');
+            rawVal = pt ? (_truthy?'Sim':'Não') : (_truthy?'Yes':'No');
+          } else if(col.key==='idioma'){
+            var _iv=rawVal.trim().toUpperCase();
+            var _idiomaDict = pt?idiomaPT:idiomaEN;
+            rawVal = _idiomaDict[_iv] || rawVal;
+          }
+          // 'estado' se traduce más abajo dentro de pillColor() con su propio diccionario
+        }
         if(col.isEstado){
           var pc=pillColor(rawVal);
           var pw2=Math.min(cw4-8*S, 108*S), ph2=10*S;
@@ -20011,7 +20304,7 @@ function _buildListadoPDF(lang){
         var blob=new Blob([pdfBytes],{type:'application/pdf'});
         var a=document.createElement('a');
         a.href=URL.createObjectURL(blob);
-        a.download='LM-0019_'+(es?'Listado_Maestro':'Master_Document_List')+'_'+fnDate+'.pdf';
+        a.download='LM-0019_'+(es?'Listado_Maestro':pt?'Lista_Mestra':'Master_Document_List')+'_'+fnDate+'.pdf';
         document.body.appendChild(a);
         a.click();
         setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(a.href); },8000);
@@ -20478,7 +20771,7 @@ var RB_COLS = [
   'estatus','fechaRevIni','fechaRevFin','fechaEntregaFirma',
   'fechaOficializacion','fechaActListado','fechaIntranet',
   'estadoOficializacion','correoUsuario','retiroRuta',
-  'cambioIdentidad','cambioCargos'   // Nuevas columnas de seguimiento de cambios
+  'cambioIdentidad','cambioCargos','cambioMultiSociedad'   // Columnas de seguimiento de cambios
 ];
 
 // Leer hoja Solicitudes_de_Usuarios del Excel
@@ -20538,7 +20831,7 @@ function rbEscribirHoja(wb){
      'Fecha De Entrega Del Documento En Firma Fisica o por Adobe Singn','Fecha De Oficialización',
      'Fecha De Actualización En Listado Maestro','Fecha De Colocación Del Documento En Intranet',
      'Estado De oficialización','Correo De Usuarios','Retiro De Ruta',
-     'Cambio Identidad Corporativa','Cambio Cargos (Gerente/Director)']
+     'Cambio Identidad Corporativa','Cambio Cargos (Gerente/Director)','Aplica Multi-Sociedad']
   )];
   solicitudes.forEach(function(s,i){
     var row=[i+2];
@@ -20560,21 +20853,22 @@ function rbEstadoInfo(s){
   var esOfic=est.toLowerCase().indexOf('oficial')>=0;
   var esAnulado=est.toLowerCase().indexOf('anulad')>=0||est.toLowerCase()==='solicitud anulada'||est.toLowerCase()==='eliminación cerrada';
   var esRechazo=est.toLowerCase().indexOf('rechaz')>=0;
+  var esRetirada=est.toLowerCase().indexOf('retirada por vencimiento')>=0;
   var esRevision=est.toLowerCase()==='en revisión'||est.toLowerCase()==='en revision'||est.toLowerCase()==='aceptada';
   var esFirma=est.toLowerCase().indexOf('proceso de firma')>=0||est.toLowerCase()==='en proceso';
-  var color=esAnulado?'#6d28d9':esOfic?'var(--G)':esRechazo?'var(--R)':esFirma?'var(--T)':esRevision?'var(--A)':'#aaa';
-  var bg=esAnulado?'#f3e8ff':esOfic?'#e6f9f3':esRechazo?'#fde8e8':esFirma?'#e0f5f3':esRevision?'#fff8e1':'#f0f0f0';
-  var tc=esAnulado?'#5b21b6':esOfic?'#0f7a50':esRechazo?'#a02020':esFirma?'var(--T3)':esRevision?'#a06000':'#666';
-  var label=esAnulado?'Anulada':esOfic?'Oficializado':esRechazo?'Rechazada':esFirma?'En proceso de firma':esRevision?'En revisión':est||'Pendiente';
-  return{color:color,bg:bg,tc:tc,label:label,esOfic:esOfic,esAnulado:esAnulado,esRechazo:esRechazo,esRevision:esRevision,esFirma:esFirma};
+  var color=esRetirada?'#7c2d12':esAnulado?'#6d28d9':esOfic?'var(--G)':esRechazo?'var(--R)':esFirma?'var(--T)':esRevision?'var(--A)':'#aaa';
+  var bg=esRetirada?'#fef2e6':esAnulado?'#f3e8ff':esOfic?'#e6f9f3':esRechazo?'#fde8e8':esFirma?'#e0f5f3':esRevision?'#fff8e1':'#f0f0f0';
+  var tc=esRetirada?'#7c2d12':esAnulado?'#5b21b6':esOfic?'#0f7a50':esRechazo?'#a02020':esFirma?'var(--T3)':esRevision?'#a06000':'#666';
+  var label=esRetirada?'Retirada por vencimiento':esAnulado?'Anulada':esOfic?'Oficializado':esRechazo?'Rechazada':esFirma?'En proceso de firma':esRevision?'En revisión':est||'Pendiente';
+  return{color:color,bg:bg,tc:tc,label:label,esOfic:esOfic,esAnulado:esAnulado,esRechazo:esRechazo,esRetirada:esRetirada,esRevision:esRevision,esFirma:esFirma};
 }
 
 function rbSplitStageBar(s){
   var info=rbEstadoInfo(s);
   var stages=[
-    {key:'revision',  label:'En revisión',       done:info.esRevision||info.esFirma||info.esOfic, active:info.esRevision&&!info.esFirma&&!info.esOfic},
-    {key:'firma',     label:'En proceso de firma',done:info.esFirma||info.esOfic,                  active:info.esFirma&&!info.esOfic},
-    {key:'oficial',   label:'Oficializado',       done:info.esOfic,                                active:false}
+    {key:'revision',  label:'En revisión',       done:info.esRevision||info.esFirma||info.esOfic||info.esRetirada, active:info.esRevision&&!info.esFirma&&!info.esOfic&&!info.esRetirada},
+    {key:'firma',     label:'En proceso de firma',done:info.esFirma||info.esOfic,                  active:info.esFirma&&!info.esOfic&&!info.esRetirada},
+    {key:'oficial',   label:info.esRetirada?'Retirada por vencimiento':'Oficializado',       done:info.esOfic||info.esRetirada,                                active:false}
   ];
   return stages.map(function(st,i){
     var pillBg=st.done&&!st.active?'var(--G)':st.active?'var(--A)':'var(--bg4)';
@@ -20659,6 +20953,9 @@ function rbRender(){
   var cnt=document.getElementById('rb-contador');
   if(cnt) cnt.textContent=filtrados.length+' solicitud'+(filtrados.length!==1?'es':'');
 
+  // Actualizar badge de alerta de antigüedad
+  if(typeof rbActualizarBadgeAntiguedad==='function') rbActualizarBadgeAntiguedad();
+
   rbRenderList(filtrados);
   // Re-render detail if active sol still in filtrados
   if(_rbActiveSol){
@@ -20671,9 +20968,9 @@ function rbRender(){
 function rbToggleCambio(consecutivo, tipo, checked){
   var s=(solicitudes||[]).find(function(x){return String(x.consecutivo)===String(consecutivo);});
   if(!s){toast('Solicitud no encontrada','er');return;}
-  var campo   = tipo==='identidad' ? 'cambioIdentidad' : 'cambioCargos';
+  var campo   = tipo==='identidad' ? 'cambioIdentidad' : tipo==='cargos' ? 'cambioCargos' : 'cambioMultiSociedad';
   var valor   = checked ? 'SI' : '';
-  var etiqueta= tipo==='identidad' ? 'Cambio Identidad Corporativa' : 'Cambio Cargos (Gerente/Director)';
+  var etiqueta= tipo==='identidad' ? 'Cambio Identidad Corporativa' : tipo==='cargos' ? 'Cambio Cargos (Gerente/Director)' : 'Aplica Multi-Sociedad';
   // Sincronizar en solicitudes[] Y en docs[] del mismo código
   _cambioSyncSol(s.codigo, campo, valor);
   logA(currentUser?currentUser.nombre:'Sistema',
@@ -20735,10 +21032,11 @@ function _rbDocsUnificados(){
 function rbCambioTab(tab){
   _rbCambioTabActiva = tab;
   // Reset tab buttons
-  ['identidad','cargos','ambos','pendientes'].forEach(function(t){
+  var colores={identidad:'#7c3aed',cargos:'#0284c7',ambos:'#059669',multisoc:'#059669',pendientes:'#92400e'};
+  ['identidad','cargos','ambos','multisoc','pendientes'].forEach(function(t){
     var btn=document.getElementById('rb-tab-'+t);
     if(!btn) return;
-    btn.style.background = t===tab ? (t==='identidad'?'#7c3aed':t==='cargos'?'#0284c7':t==='ambos'?'#059669':'#92400e') : '';
+    btn.style.background = t===tab ? colores[t] : '';
     btn.style.color = t===tab ? '#fff' : '';
     btn.className = t===tab ? 'btn sm' : 'btn gh sm';
   });
@@ -20771,6 +21069,9 @@ function rbRenderCambiosTabla(tab){
     var cargos = d._deSolicitud
       ? d.cambioCargos==='SI'
       : (sol && sol.cambioCargos==='SI') || d.cambioCargos==='SI';
+    var multisoc = d._deSolicitud
+      ? d.cambioMultiSociedad==='SI'
+      : (sol && sol.cambioMultiSociedad==='SI') || d.cambioMultiSociedad==='SI';
     return {
       codigo:    d.codigoActual||'',
       nombre:    d.descripcion||'',
@@ -20778,6 +21079,7 @@ function rbRenderCambiosTabla(tab){
       version:   d.version||'',
       identidad: identidad,
       cargos:    cargos,
+      multisoc:  multisoc,
       estadoRB:  sol ? (sol.estadoOficializacion||sol.estatus||'En proceso') : '—',
       esOfic:    sol && (sol.estadoOficializacion||'').toLowerCase().indexOf('oficial')>=0,
       esNuevo:   !!d._deSolicitud
@@ -20788,8 +21090,9 @@ function rbRenderCambiosTabla(tab){
   var filtrados;
   if(tab==='identidad')   filtrados = rows.filter(function(r){return r.identidad;});
   else if(tab==='cargos') filtrados = rows.filter(function(r){return r.cargos;});
+  else if(tab==='multisoc') filtrados = rows.filter(function(r){return r.multisoc;});
   else if(tab==='ambos')  filtrados = rows.filter(function(r){return r.identidad && r.cargos;});
-  else                    filtrados = rows.filter(function(r){return !r.identidad && !r.cargos;});
+  else                    filtrados = rows.filter(function(r){return !r.identidad && !r.cargos && !r.multisoc;});
 
   filtrados.sort(function(a,b){return a.codigo.localeCompare(b.codigo);});
 
@@ -20797,13 +21100,15 @@ function rbRenderCambiosTabla(tab){
   var totalLM = unificados.length;
   var cntId   = rows.filter(function(r){return r.identidad;}).length;
   var cntCar  = rows.filter(function(r){return r.cargos;}).length;
+  var cntMs   = rows.filter(function(r){return r.multisoc;}).length;
   var cntAmb  = rows.filter(function(r){return r.identidad&&r.cargos;}).length;
-  var cntPend = rows.filter(function(r){return !r.identidad&&!r.cargos;}).length;
+  var cntPend = rows.filter(function(r){return !r.identidad&&!r.cargos&&!r.multisoc;}).length;
   var statsEl = document.getElementById('rb-cambios-stats');
   if(statsEl) statsEl.innerHTML =
     'LM total: <strong>'+totalLM+'</strong> &nbsp;|&nbsp; '+
     '🏢 Identidad: <strong style="color:#7c3aed">'+cntId+'</strong> &nbsp;|&nbsp; '+
     '👔 Cargos: <strong style="color:#0284c7">'+cntCar+'</strong> &nbsp;|&nbsp; '+
+    '🏬 Multi-Sociedad: <strong style="color:#059669">'+cntMs+'</strong> &nbsp;|&nbsp; '+
     '🔀 Ambos: <strong style="color:#059669">'+cntAmb+'</strong> &nbsp;|&nbsp; '+
     '⏳ Pendientes: <strong style="color:#92400e">'+cntPend+'</strong>';
 
@@ -20826,6 +21131,9 @@ function rbRenderCambiosTabla(tab){
     var carBadge = r.cargos
       ? '<span style="background:#e0f2fe;color:#0284c7;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700">✓ Sí</span>'
       : '<span style="color:var(--tx3);font-size:10px">—</span>';
+    var msBadge = r.multisoc
+      ? '<span style="background:#d1fae5;color:#059669;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700">✓ Sí</span>'
+      : '<span style="color:var(--tx3);font-size:10px">—</span>';
     var estadoBadge = r.estadoRB==='—'
       ? '<span style="color:var(--tx3);font-size:10px">Sin solicitud</span>'
       : '<span style="background:'+(r.esOfic?'#d1fae5':'#fef3c7')+';color:'+(r.esOfic?'#065f46':'#92400e')+';border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600">'+(r.esOfic?'✅ ':'📋 ')+r.estadoRB+'</span>';
@@ -20839,6 +21147,7 @@ function rbRenderCambiosTabla(tab){
       +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);color:var(--tx3);text-align:center">'+r.version+'</td>'
       +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);text-align:center">'+idBadge+'</td>'
       +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);text-align:center">'+carBadge+'</td>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);text-align:center">'+msBadge+'</td>'
       +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd)">'+estadoBadge+'</td>'
       +'</tr>';
   }).join('');
@@ -20850,6 +21159,7 @@ function rbExportarCambiosCSV(){
   var tabLabels = {
     identidad: 'Identidad Corporativa',
     cargos:    'Cargos Gerente-Director',
+    multisoc:  'Multi-Sociedad',
     ambos:     'Ambos Cambios',
     pendientes:'Sin Marcar'
   };
@@ -20874,9 +21184,12 @@ function rbExportarCambiosCSV(){
     var cargos = d._deSolicitud
       ? d.cambioCargos==='SI'
       : (sol&&sol.cambioCargos==='SI') || d.cambioCargos==='SI';
+    var multisoc = d._deSolicitud
+      ? d.cambioMultiSociedad==='SI'
+      : (sol&&sol.cambioMultiSociedad==='SI') || d.cambioMultiSociedad==='SI';
     return {
       d: d, sol: sol,
-      identidad: identidad, cargos: cargos,
+      identidad: identidad, cargos: cargos, multisoc: multisoc,
       esNuevo: !!d._deSolicitud
     };
   });
@@ -20885,8 +21198,9 @@ function rbExportarCambiosCSV(){
   var filtRows;
   if(tab==='identidad')   filtRows = rows.filter(function(r){return r.identidad;});
   else if(tab==='cargos') filtRows = rows.filter(function(r){return r.cargos;});
+  else if(tab==='multisoc') filtRows = rows.filter(function(r){return r.multisoc;});
   else if(tab==='ambos')  filtRows = rows.filter(function(r){return r.identidad&&r.cargos;});
-  else                    filtRows = rows.filter(function(r){return !r.identidad&&!r.cargos;});
+  else                    filtRows = rows.filter(function(r){return !r.identidad&&!r.cargos&&!r.multisoc;});
 
   filtRows.sort(function(a,b){ return (a.d.codigoActual||'').localeCompare(b.d.codigoActual||''); });
   var filtrados = filtRows; // alias para el bloque de escritura
@@ -20911,6 +21225,7 @@ function rbExportarCambiosCSV(){
   var S_CAR  ={font:{name:'Calibri',sz:9,bold:true,color:{rgb:'0369A1'}},fill:{fgColor:{rgb:'E0F2FE'},patternType:'solid'},border:bd,alignment:{horizontal:'center',vertical:'center'}};
   var S_NO   ={font:{name:'Calibri',sz:9,color:{rgb:'888888'}},          fill:{fgColor:{rgb:'FAFAFA'},patternType:'solid'},border:bd,alignment:{horizontal:'center',vertical:'center'}};
   var S_RB   ={font:{name:'Calibri',sz:9,color:{rgb:'92400E'}},          fill:{fgColor:{rgb:'FEF3C7'},patternType:'solid'},border:bd,alignment:{horizontal:'left',vertical:'center'}};
+  var S_MS   ={font:{name:'Calibri',sz:9,bold:true,color:{rgb:'047857'}},fill:{fgColor:{rgb:'D1FAE5'},patternType:'solid'},border:bd,alignment:{horizontal:'center',vertical:'center'}};
 
   var cols = [
     {h:'Código',                    w:16},
@@ -20920,6 +21235,7 @@ function rbExportarCambiosCSV(){
     {h:'Estado LM',                 w:16},
     {h:'Identidad Corporativa',     w:20},
     {h:'Cargos Gerente/Director',   w:20},
+    {h:'Aplica Multi-Sociedad',     w:20},
     {h:'Estado en Ruta de Borrador',w:24}
   ];
   var NC = cols.length;
@@ -20955,6 +21271,7 @@ function rbExportarCambiosCSV(){
     if(row.esNuevo) baseS = {font:{name:'Calibri',sz:9,color:{rgb:'78350F'}},fill:{fgColor:{rgb:'FFFBEB'},patternType:'solid'},border:bd,alignment:{horizontal:'left',vertical:'center'}};
     var idVal  = row.identidad ? 'SI' : 'NO';
     var carVal = row.cargos    ? 'SI' : 'NO';
+    var msVal  = row.multisoc  ? 'SI' : 'NO';
     var rbEst  = sol ? (sol.estadoOficializacion||sol.estatus||'En proceso') : 'Sin solicitud';
     var estadoVal = row.esNuevo ? 'Nuevo (en RB)' : (d.estado||'');
     aoa.push([
@@ -20965,6 +21282,7 @@ function rbExportarCambiosCSV(){
       {v:estadoVal,            t:'s',s:baseS},
       {v:idVal,                t:'s',s:idVal==='SI'?S_ID:S_NO},
       {v:carVal,               t:'s',s:carVal==='SI'?S_CAR:S_NO},
+      {v:msVal,                t:'s',s:msVal==='SI'?S_MS:S_NO},
       {v:rbEst,                t:'s',s:sol?S_RB:baseS}
     ]);
   });
@@ -21107,7 +21425,7 @@ function rbRenderDetail(s){
       +'</div>'
     +'</div>'
     // ── CAMBIOS DE IDENTIDAD / CARGOS ──
-    +'<div class="rb-det-sec" style="margin:0 0 12px 0;padding:12px 14px;border:1px solid var(--brd);border-radius:8px;background:#f8fafc">'      +'<div class="rb-det-sec-title" style="margin-bottom:8px">🏷️ Seguimiento de Cambios Aplicados</div>'      +'<div style="display:flex;gap:24px;flex-wrap:wrap">'        +'<label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)">'          +'<input type="checkbox" id="rb-chk-identidad" '+(s.cambioIdentidad==='SI'?'checked':'')+' onchange="rbToggleCambio(\''+s.consecutivo+'\',\'identidad\',this.checked)" style="width:16px;height:16px;accent-color:#7c3aed;cursor:pointer">'          +'<span>🏢 Cambio Identidad Corporativa</span>'        +'</label>'        +'<label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)">'          +'<input type="checkbox" id="rb-chk-cargos" '+(s.cambioCargos==='SI'?'checked':'')+' onchange="rbToggleCambio(\''+s.consecutivo+'\',\'cargos\',this.checked)" style="width:16px;height:16px;accent-color:#0284c7;cursor:pointer">'          +'<span>👔 Cambio Cargos (Gerente/Director)</span>'        +'</label>'      +'</div>'      +(s.cambioIdentidad==='SI'||s.cambioCargos==='SI'        ?'<div style="margin-top:8px;font-size:10px;color:var(--tx3)">'          +(s.cambioIdentidad==='SI'?'<span style="background:#ede9fe;color:#7c3aed;border-radius:4px;padding:2px 7px;margin-right:5px;font-weight:700">✓ Identidad Corporativa</span>':'')          +(s.cambioCargos==='SI'?'<span style="background:#e0f2fe;color:#0284c7;border-radius:4px;padding:2px 7px;font-weight:700">✓ Cargos Gerente/Director</span>':'')        +'</div>'        :'')    +'</div>'    // ── ACTIONS ──
+    +'<div class="rb-det-sec" style="margin:0 0 12px 0;padding:12px 14px;border:1px solid var(--brd);border-radius:8px;background:#f8fafc">'      +'<div class="rb-det-sec-title" style="margin-bottom:8px">🏷️ Seguimiento de Cambios Aplicados</div>'      +'<div style="display:flex;gap:24px;flex-wrap:wrap">'        +'<label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)">'          +'<input type="checkbox" id="rb-chk-identidad" '+(s.cambioIdentidad==='SI'?'checked':'')+' onchange="rbToggleCambio(\''+s.consecutivo+'\',\'identidad\',this.checked)" style="width:16px;height:16px;accent-color:#7c3aed;cursor:pointer">'          +'<span>🏢 Cambio Identidad Corporativa</span>'        +'</label>'        +'<label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)">'          +'<input type="checkbox" id="rb-chk-cargos" '+(s.cambioCargos==='SI'?'checked':'')+' onchange="rbToggleCambio(\''+s.consecutivo+'\',\'cargos\',this.checked)" style="width:16px;height:16px;accent-color:#0284c7;cursor:pointer">'          +'<span>👔 Cambio Cargos (Gerente/Director)</span>'        +'</label>'        +'<label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)">'          +'<input type="checkbox" id="rb-chk-multisoc" '+(s.cambioMultiSociedad==='SI'?'checked':'')+' onchange="rbToggleCambio(\''+s.consecutivo+'\',\'multisoc\',this.checked)" style="width:16px;height:16px;accent-color:#059669;cursor:pointer">'          +'<span>🏬 Aplica Multi-Sociedad</span>'        +'</label>'      +'</div>'      +(s.cambioIdentidad==='SI'||s.cambioCargos==='SI'||s.cambioMultiSociedad==='SI'        ?'<div style="margin-top:8px;font-size:10px;color:var(--tx3)">'          +(s.cambioIdentidad==='SI'?'<span style="background:#ede9fe;color:#7c3aed;border-radius:4px;padding:2px 7px;margin-right:5px;font-weight:700">✓ Identidad Corporativa</span>':'')          +(s.cambioCargos==='SI'?'<span style="background:#e0f2fe;color:#0284c7;border-radius:4px;padding:2px 7px;margin-right:5px;font-weight:700">✓ Cargos Gerente/Director</span>':'')          +(s.cambioMultiSociedad==='SI'?'<span style="background:#d1fae5;color:#059669;border-radius:4px;padding:2px 7px;font-weight:700">✓ Multi-Sociedad</span>':'')        +'</div>'        :'')    +'</div>'    // ── ACTIONS ──
     +'<div class="rb-det-actions">'
       +'<button class="btn gh sm" onclick="rbVerDetalle('+s.consecutivo+')">👁 Ver detalle completo</button>'
       +(!info.esOfic&&!info.esFirma&&!info.esRechazo
@@ -21121,6 +21439,8 @@ function rbRenderDetail(s){
         :'')
       +(!info.esAnulado&&!info.esOfic
         ?'<button class="btn sm" style="background:#7c3aed;color:#fff" onclick="rbAnularDirecto(\''+s.consecutivo+'\')" title="Anular esta solicitud">🚫 Anular solicitud</button>'
+        :'')      +(!info.esAnulado&&!info.esOfic&&!info.esRechazo&&!info.esRetirada
+        ?'<button class="btn sm" style="background:#78350f;color:#fff;border-color:#78350f" onclick="rbRetirarPorVencimiento(\''+s.consecutivo+'\')" title="Marcar como Retirada por vencimiento de tiempo — el documento no fue oficializado en el plazo">⌛ Retirada por vencimiento</button>'
         :'')
       +(!info.esAnulado&&!info.esOfic
         ?'<button class="btn gh sm" style="border-color:var(--T);color:var(--T)" onclick="rbEditarSolicitud(\''+s.consecutivo+'\')" title="Editar datos de esta solicitud">✏️ Editar</button>'
@@ -21276,6 +21596,35 @@ function rbAprobar(consecutivo){
   if(window.OD&&OD.fileHandle&&OD.syncActivo){if(OD.saveTimer)clearTimeout(OD.saveTimer);OD.saveTimer=setTimeout(function(){odGuardarListado(true);},60000);}
 }
 
+function rbRetirarPorVencimiento(consecutivo){
+  var s=(solicitudes||[]).find(function(x){return String(x.consecutivo)===String(consecutivo);});
+  if(!s) return;
+  var info=rbEstadoInfo(s);
+  if(info.esOfic||info.esAnulado||info.esRechazo){
+    toast('Esta solicitud ya tiene un estado final','er'); return;
+  }
+  if(!confirm(
+    'Marcar la solicitud #'+consecutivo+' como "Retirada por vencimiento de tiempo"?\n\n'+
+    'Código: '+s.codigo+'\nDocumento: '+s.nombreDoc+'\n\n'+
+    'Esto indica que el documento no fue oficializado dentro del plazo establecido.\n'+
+    'La solicitud quedará cerrada y no podrá ser aprobada ni oficializada.'
+  )) return;
+  s.estatus='Retirada por vencimiento';
+  s.estadoOficializacion='Retirada por vencimiento';
+  s.fechaRetiro=new Date().toISOString().slice(0,10);
+  saveArr('sol',solicitudes);
+  logA(currentUser?currentUser.nombre:'Usuario','Retiro por vencimiento',
+    'Solicitud #'+consecutivo+' — '+s.codigo+' | '+s.nombreDoc,
+    'Estado anterior: '+info.label,
+    'Ruta de Borrador');
+  toast('⌛ Solicitud #'+consecutivo+' marcada como Retirada por vencimiento','ok');
+  rbRender();
+  if(window.OD&&OD.fileHandle&&OD.syncActivo){
+    if(OD.saveTimer)clearTimeout(OD.saveTimer);
+    OD.saveTimer=setTimeout(function(){odGuardarListado(true);},60000);
+  }
+}
+
 function rbRevertirARevision(consecutivo){
   var s=(solicitudes||[]).find(function(x){return String(x.consecutivo)===String(consecutivo);});
   if(!s) return;
@@ -21295,6 +21644,227 @@ function rbRevertirARevision(consecutivo){
   if(window.OD&&OD.fileHandle&&OD.syncActivo){
     if(OD.saveTimer)clearTimeout(OD.saveTimer);
     OD.saveTimer=setTimeout(function(){odGuardarListado(true);},60000);
+  }
+}
+
+// ── Alerta de Antigüedad: solicitudes activas sin oficializar ───────────────
+// Calcula días transcurridos desde fechaSolicitud y clasifica en 1/2/3 meses.
+function _rbDiasTranscurridos(fechaStr){
+  if(!fechaStr) return null;
+  var f = new Date(fechaStr+'T00:00:00');
+  if(isNaN(f.getTime())) return null;
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  return Math.round((hoy.getTime()-f.getTime())/86400000);
+}
+
+// Solicitudes activas: solo En revisión o En proceso de firma, con 30+ días sin oficializar
+function _rbSolicitudesActivasConAntiguedad(){
+  return (solicitudes||[]).map(function(s){
+    var info = rbEstadoInfo(s);
+    var dias = _rbDiasTranscurridos(s.fechaSolicitud);
+    return { s:s, info:info, dias:dias };
+  }).filter(function(r){
+    // Solo incluir las que están activamente en proceso (revisión o firma)
+    // Excluye: oficializadas, anuladas, rechazadas, pendientes, u otros estados
+    return (r.info.esRevision || r.info.esFirma) && r.dias!==null && r.dias>=30;
+  }).map(function(r){
+    var meses = r.dias>=90 ? 3 : r.dias>=60 ? 2 : 1;
+    return Object.assign(r, {meses:meses});
+  });
+}
+
+var _rbAntiguedadTabActiva = '1m';
+
+function rbAbrirAlertaAntiguedad(){
+  _rbAntiguedadTabActiva = '1m';
+  document.getElementById('rb-mo-antiguedad').style.display='flex';
+  rbAntiguedadTab('1m');
+}
+
+function rbAntiguedadTab(tab){
+  _rbAntiguedadTabActiva = tab;
+  var colores = {'1m':'#d97706','2m':'#ea580c','3m':'#dc2626','todos':'#374151'};
+  ['1m','2m','3m','todos'].forEach(function(t){
+    var btn=document.getElementById('rb-ant-tab-'+t);
+    if(!btn) return;
+    btn.style.background = t===tab ? colores[t] : '';
+    btn.style.color = t===tab ? '#fff' : '';
+    btn.className = t===tab ? 'btn sm' : 'btn gh sm';
+  });
+  rbRenderAntiguedadTabla(tab);
+}
+
+function rbRenderAntiguedadTabla(tab){
+  var activas = _rbSolicitudesActivasConAntiguedad();
+  var cnt1 = activas.filter(function(r){return r.meses===1;}).length;
+  var cnt2 = activas.filter(function(r){return r.meses===2;}).length;
+  var cnt3 = activas.filter(function(r){return r.meses===3;}).length;
+
+  var statsEl = document.getElementById('rb-antiguedad-stats');
+  if(statsEl) statsEl.innerHTML =
+    'Total con 1m+: <strong>'+activas.length+'</strong> &nbsp;|&nbsp; '+
+    '\uD83D\uDFE1 1 Mes: <strong style="color:#d97706">'+cnt1+'</strong> &nbsp;|&nbsp; '+
+    '\uD83D\uDFE0 2 Meses: <strong style="color:#ea580c">'+cnt2+'</strong> &nbsp;|&nbsp; '+
+    '\uD83D\uDD34 3 Meses+: <strong style="color:#dc2626">'+cnt3+'</strong>';
+
+  var filtrados;
+  if(tab==='1m')        filtrados = activas.filter(function(r){return r.meses===1;});
+  else if(tab==='2m')   filtrados = activas.filter(function(r){return r.meses===2;});
+  else if(tab==='3m')   filtrados = activas.filter(function(r){return r.meses===3;});
+  else                  filtrados = activas.slice();
+
+  filtrados.sort(function(a,b){ return b.dias - a.dias; });
+
+  var tbody = document.getElementById('rb-antiguedad-body');
+  var empty = document.getElementById('rb-antiguedad-empty');
+  if(!tbody) return;
+
+  if(!filtrados.length){
+    tbody.innerHTML = '';
+    if(empty) empty.style.display='block';
+    return;
+  }
+  if(empty) empty.style.display='none';
+
+  tbody.innerHTML = filtrados.map(function(r, i){
+    var s = r.s, info = r.info;
+    var esRojo = r.meses===3;
+    var rowStyle = esRojo ? 'background:#fef2f2' : (i%2===1?'background:var(--bg3)':'');
+    var antLabel = r.meses===3
+      ? '<span style="background:#fecaca;color:#991b1b;border-radius:4px;padding:3px 10px;font-size:10px;font-weight:800">\uD83D\uDD34 3+ meses</span>'
+      : r.meses===2
+      ? '<span style="background:#fed7aa;color:#9a3412;border-radius:4px;padding:3px 10px;font-size:10px;font-weight:700">\uD83D\uDFE0 2 meses</span>'
+      : '<span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:3px 10px;font-size:10px;font-weight:700">\uD83D\uDFE1 1 mes</span>';
+    var estadoBadge = '<span style="background:'+info.bg+';color:'+info.tc+';border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600">'+info.label+'</span>';
+    var diasTexto = r.dias + ' d\u00edas';
+    var clickAttr = 'onclick="rbVerDetalle('+s.consecutivo+');document.getElementById(\'rb-mo-antiguedad\').style.display=\'none\';" style="cursor:pointer;'+rowStyle+(esRojo?';font-weight:600':'')+'"';
+    return '<tr '+clickAttr+'>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);color:var(--tx3);font-size:10px">'+(i+1)+'</td>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);font-family:monospace;font-weight:700;color:'+(esRojo?'#991b1b':'var(--T3)')+';font-size:10px">'+(s.codigo||'\u2014')+'</td>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);color:'+(esRojo?'#991b1b':'var(--tx)')+';max-width:260px">'+(s.nombreDoc||'\u2014')+'</td>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);color:var(--tx2);font-size:10px">'+(s.solicitante||'\u2014')+'</td>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);color:var(--tx2);font-size:10px">'+(s.areaGeneradora||'\u2014')+'</td>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);color:var(--tx3);font-size:10px">'+(s.fechaSolicitud||'\u2014')+'</td>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);text-align:center;color:'+(esRojo?'#991b1b':'var(--tx)')+';font-weight:700">'+diasTexto+'</td>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd)">'+estadoBadge+'</td>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid var(--brd);text-align:center">'+antLabel+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+// ── Badge en el bot\u00f3n: muestra el total de solicitudes en alerta (1m+) ──
+function rbActualizarBadgeAntiguedad(){
+  var badge = document.getElementById('rb-antiguedad-badge');
+  if(!badge) return;
+  var activas = _rbSolicitudesActivasConAntiguedad();
+  if(activas.length>0){
+    badge.style.display='inline-block';
+    badge.textContent = activas.length;
+    var cnt3 = activas.filter(function(r){return r.meses===3;}).length;
+    var btn = document.getElementById('rb-btn-antiguedad');
+    if(btn) btn.style.boxShadow = cnt3>0 ? '0 0 0 2px #fecaca' : '';
+  } else {
+    badge.style.display='none';
+    var btn2 = document.getElementById('rb-btn-antiguedad');
+    if(btn2) btn2.style.boxShadow = '';
+  }
+}
+
+// ── Exportar Excel (formato Listado Maestro) \u2014 Alerta de Antig\u00fcedad ──
+function rbExportarAntiguedadXLSX(){
+  var tab = _rbAntiguedadTabActiva || '1m';
+  var tabLabels = { '1m':'1 Mes', '2m':'2 Meses', '3m':'3 Meses o mas', 'todos':'Todas (1 mes o mas)' };
+
+  var activas = _rbSolicitudesActivasConAntiguedad();
+  var filtrados;
+  if(tab==='1m')      filtrados = activas.filter(function(r){return r.meses===1;});
+  else if(tab==='2m') filtrados = activas.filter(function(r){return r.meses===2;});
+  else if(tab==='3m') filtrados = activas.filter(function(r){return r.meses===3;});
+  else                filtrados = activas.slice();
+
+  filtrados.sort(function(a,b){ return b.dias - a.dias; });
+
+  if(!filtrados.length){ toast('Sin solicitudes en esta categor\u00eda','er'); return; }
+
+  var today = new Date();
+  var fechaHoy = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+
+  var S_TITLE={font:{name:'Calibri',sz:13,bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'006860'},patternType:'solid'},alignment:{horizontal:'center',vertical:'center',wrapText:true}};
+  var S_SUB  ={font:{name:'Calibri',sz:10,color:{rgb:'D0F0EC'}},          fill:{fgColor:{rgb:'009B8D'},patternType:'solid'},alignment:{horizontal:'center',vertical:'center'}};
+  var S_MLBL ={font:{name:'Calibri',sz:8,bold:true,color:{rgb:'006860'}}, fill:{fgColor:{rgb:'F5F9F9'},patternType:'solid'},alignment:{horizontal:'left',vertical:'center'}};
+  var S_MVAL ={font:{name:'Calibri',sz:8,color:{rgb:'336666'}},           fill:{fgColor:{rgb:'F5F9F9'},patternType:'solid'},alignment:{horizontal:'left',vertical:'center'}};
+  var S_HDR  ={font:{name:'Calibri',sz:9,bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'009B8D'},patternType:'solid'},alignment:{horizontal:'center',vertical:'center',wrapText:true},
+               border:{top:{style:'thin',color:{rgb:'FFFFFF'}},bottom:{style:'thin',color:{rgb:'FFFFFF'}},left:{style:'thin',color:{rgb:'FFFFFF'}},right:{style:'thin',color:{rgb:'FFFFFF'}}}};
+  var bd={top:{style:'thin',color:{rgb:'C8DEDE'}},bottom:{style:'thin',color:{rgb:'C8DEDE'}},left:{style:'thin',color:{rgb:'C8DEDE'}},right:{style:'thin',color:{rgb:'C8DEDE'}}};
+  var S_CELL_W={font:{name:'Calibri',sz:9,color:{rgb:'0A2828'}},fill:{fgColor:{rgb:'FFFFFF'},patternType:'solid'},border:bd,alignment:{horizontal:'left',vertical:'center'}};
+  var S_CELL_A={font:{name:'Calibri',sz:9,color:{rgb:'0A2828'}},fill:{fgColor:{rgb:'F0F4F3'},patternType:'solid'},border:bd,alignment:{horizontal:'left',vertical:'center'}};
+  var S_1M   ={font:{name:'Calibri',sz:9,bold:true,color:{rgb:'92400E'}},fill:{fgColor:{rgb:'FEF3C7'},patternType:'solid'},border:bd,alignment:{horizontal:'center',vertical:'center'}};
+  var S_2M   ={font:{name:'Calibri',sz:9,bold:true,color:{rgb:'9A3412'}},fill:{fgColor:{rgb:'FED7AA'},patternType:'solid'},border:bd,alignment:{horizontal:'center',vertical:'center'}};
+  var S_3M   ={font:{name:'Calibri',sz:10,bold:true,color:{rgb:'991B1B'}},fill:{fgColor:{rgb:'FECACA'},patternType:'solid'},border:bd,alignment:{horizontal:'center',vertical:'center'}};
+  var S_DIAS ={font:{name:'Calibri',sz:9,bold:true,color:{rgb:'0A2828'}},fill:{fgColor:{rgb:'FFFFFF'},patternType:'solid'},border:bd,alignment:{horizontal:'center',vertical:'center'}};
+
+  var cols = [
+    {h:'C\u00f3digo',                w:16},
+    {h:'Nombre del Documento',   w:44},
+    {h:'Solicitante',            w:24},
+    {h:'\u00c1rea Generadora',        w:22},
+    {h:'Fecha de Solicitud',     w:16},
+    {h:'D\u00edas Transcurridos',     w:16},
+    {h:'Estado Actual',          w:20},
+    {h:'Antig\u00fcedad',             w:16}
+  ];
+  var NC = cols.length;
+  var aoa = [];
+
+  var r0=[{v:'ALERTA DE ANTIG\u00dcEDAD \u2014 SOLICITUDES SIN OFICIALIZAR \u2014 '+tabLabels[tab].toUpperCase(),t:'s',s:S_TITLE}];
+  for(var ci=1;ci<NC;ci++) r0.push({v:'',t:'s',s:S_TITLE});
+  aoa.push(r0);
+
+  var r1=[{v:'Ruta de Borrador \u2014 Solicitudes activas (no oficializadas/anuladas/rechazadas) \u2014 '+fechaHoy,t:'s',s:S_SUB}];
+  for(var ci=1;ci<NC;ci++) r1.push({v:'',t:'s',s:S_SUB});
+  aoa.push(r1);
+
+  var r2=[]; for(var ci=0;ci<NC;ci++) r2.push({v:'',t:'s',s:S_MVAL});
+  var mPairs=[['Filtro:',tabLabels[tab]],['Fecha:',fechaHoy],['Total:',String(filtrados.length)],['Generado:',currentUser?currentUser.nombre:'Sistema']];
+  var mStep=Math.max(1,Math.floor(NC/mPairs.length));
+  mPairs.forEach(function(p,mi){var c0=mi*mStep;if(c0<NC)r2[c0]={v:p[0],t:'s',s:S_MLBL};if(c0+1<NC)r2[c0+1]={v:p[1],t:'s',s:S_MVAL};});
+  aoa.push(r2);
+
+  aoa.push(cols.map(function(c){ return {v:c.h,t:'s',s:S_HDR}; }));
+
+  filtrados.forEach(function(r,ri){
+    var s = r.s, info = r.info;
+    var alt = ri%2===1;
+    var baseS = alt ? S_CELL_A : S_CELL_W;
+    var antS = r.meses===3 ? S_3M : r.meses===2 ? S_2M : S_1M;
+    var antLabel = r.meses===3 ? '3+ MESES' : r.meses===2 ? '2 MESES' : '1 MES';
+    aoa.push([
+      {v:s.codigo||'',          t:'s',s:baseS},
+      {v:s.nombreDoc||'',       t:'s',s:baseS},
+      {v:s.solicitante||'',     t:'s',s:baseS},
+      {v:s.areaGeneradora||'',  t:'s',s:baseS},
+      {v:s.fechaSolicitud||'',  t:'s',s:baseS},
+      {v:r.dias,                t:'n',s:S_DIAS},
+      {v:info.label,            t:'s',s:baseS},
+      {v:antLabel,              t:'s',s:antS}
+    ]);
+  });
+
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges']     = [{s:{r:0,c:0},e:{r:0,c:NC-1}},{s:{r:1,c:0},e:{r:1,c:NC-1}}];
+  ws['!cols']       = cols.map(function(c){ return {wch:c.w}; });
+  ws['!rows']       = [{hpt:34},{hpt:22},{hpt:18},{hpt:28}].concat(filtrados.map(function(){ return {hpt:16}; }));
+  ws['!autofilter'] = {ref: XLSX.utils.encode_range({s:{r:3,c:0},e:{r:3,c:NC-1}})};
+  XLSX.utils.book_append_sheet(wb, ws, 'Alerta Antiguedad');
+
+  var fname = 'RB_Alerta_Antiguedad_'+tabLabels[tab].replace(/[^a-zA-Z0-9]/g,'_')+'_'+fechaHoy+'.xlsx';
+  try{
+    XLSX.writeFile(wb, fname, {cellStyles:true});
+    toast('\u2705 Excel descargado: '+fname,'ok');
+    logA(currentUser?currentUser.nombre:'Sistema','Descarga','Alerta Antig\u00fcedad RB ('+tab+'): '+filtrados.length+' solicitudes');
+  }catch(e){
+    toast('Error al descargar: '+e.message,'er'); console.error(e);
   }
 }
 
@@ -22362,6 +22932,10 @@ function rlExportarExcel(datos){
         <div style="font-size:22px;margin-bottom:4px">🇺🇸</div>
         <div style="font-weight:700;font-size:12px;color:var(--tx)">English</div>
       </div>
+      <div onclick="xlsSelIdioma('pt')" id="xls-op-pt" style="flex:1;border:2px solid var(--brd);border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:all .15s">
+        <div style="font-size:22px;margin-bottom:4px">🇧🇷</div>
+        <div style="font-weight:700;font-size:12px;color:var(--tx)">Português</div>
+      </div>
     </div>
 
     <!-- Filtro por estado -->
@@ -22405,30 +22979,31 @@ var _xlsLang = null;
 
 // Definición maestra de columnas disponibles
 var XLS_COLS_DEF = [
-  {key:'codigoActual',      es:'Código Actual',           en:'Current Code',          w:16, defOn:true},
-  {key:'codigoAntiguo',     es:'Código Anterior',         en:'Previous Code',         w:14, defOn:false},
-  {key:'descripcion',       es:'Descripción',             en:'Description',           w:42, defOn:true, useEn:'descriptionEn'},
-  {key:'version',           es:'Versión',                 en:'Version',               w:9,  defOn:true},
-  {key:'tipoDocumento',     es:'Tipo de Documento',       en:'Document Type',         w:20, defOn:true},
-  {key:'areaGeneradora',    es:'Área Generadora',         en:'Generating Area',       w:22, defOn:true},
-  {key:'proceso',           es:'Proceso',                 en:'Process',               w:22, defOn:true},
-  {key:'fechaVigencia',     es:'Fecha de Vigencia',       en:'Effective Date',        w:15, defOn:true},
-  {key:'fechaVencimiento',  es:'Fecha de Vencimiento',    en:'Expiration Date',       w:15, defOn:true},
-  {key:'extensionVigencia', es:'Extensión de Vigencia',   en:'Validity Extension',    w:16, defOn:false},
-  {key:'estado',            es:'Estado',                  en:'Status',                w:14, defOn:true},
-  {key:'obsoleto',          es:'Obsoleto',                en:'Obsolete',              w:10, defOn:false},
-  {key:'administrador',     es:'Administrador',           en:'Administrator',         w:24, defOn:true},
-  {key:'liderProceso',      es:'Líder de Proceso',        en:'Process Leader',        w:24, defOn:false},
-  {key:'correoElectronico', es:'Correo Electrónico',      en:'Email',                 w:32, defOn:false},
-  {key:'alcanceEmpresas',   es:'Alcance Empresas',        en:'Company Scope',         w:20, defOn:false},
-  {key:'areasAplicables',   es:'Áreas Aplicables',        en:'Applicable Areas',      w:22, defOn:false},
-  {key:'idioma',            es:'Idioma',                  en:'Language',              w:9,  defOn:false},
-  {key:'docGxP',            es:'Doc. GxP',                en:'GxP Doc',               w:9,  defOn:false},
-  {key:'docsRelacionados',  es:'Documentos Relacionados', en:'Related Documents',     w:22, defOn:false},
-  {key:'mbr',               es:'MBR',                     en:'MBR',                   w:8,  defOn:false},
-  {key:'tipoPlantilla',     es:'Tipo Plantilla',          en:'Template Type',         w:14, defOn:false},
-  {key:'docIntercompania',  es:'Doc. Intercompañía',      en:'Intercompany Doc',      w:16, defOn:false},
-  {key:'liderProceso',      es:'Líder de Proceso',        en:'Process Leader',        w:24, defOn:false},
+  {key:'codigoActual',      es:'Código Actual',           en:'Current Code',          pt:'Código Atual',            w:16, defOn:true},
+  {key:'codigoAntiguo',     es:'Código Anterior',         en:'Previous Code',         pt:'Código Anterior',         w:14, defOn:false},
+  {key:'descripcion',       es:'Descripción',             en:'Description',           pt:'Descrição',               w:42, defOn:true, useEn:'descriptionEn', usePt:'descriptionPt'},
+  {key:'descriptionEn',     es:'Description (EN)',        en:'Description (EN)',      pt:'Description (EN)',        w:42, defOn:false},
+  {key:'descriptionPt',     es:'Descrição (PT)',          en:'Descrição (PT)',         pt:'Descrição (PT)',          w:42, defOn:false},
+  {key:'version',           es:'Versión',                 en:'Version',               pt:'Versão',                  w:9,  defOn:true},
+  {key:'tipoDocumento',     es:'Tipo de Documento',       en:'Document Type',         pt:'Tipo de Documento',       w:20, defOn:true},
+  {key:'areaGeneradora',    es:'Área Generadora',         en:'Generating Area',       pt:'Área Geradora',           w:22, defOn:true},
+  {key:'proceso',           es:'Proceso',                 en:'Process',               pt:'Processo',                w:22, defOn:true},
+  {key:'fechaVigencia',     es:'Fecha de Vigencia',       en:'Effective Date',        pt:'Data de Vigência',        w:15, defOn:true},
+  {key:'fechaVencimiento',  es:'Fecha de Vencimiento',    en:'Expiration Date',       pt:'Data de Vencimento',      w:15, defOn:true},
+  {key:'extensionVigencia', es:'Extensión de Vigencia',   en:'Validity Extension',    pt:'Extensão de Validade',    w:16, defOn:false},
+  {key:'estado',            es:'Estado',                  en:'Status',                pt:'Status',                  w:14, defOn:true},
+  {key:'obsoleto',          es:'Obsoleto',                en:'Obsolete',              pt:'Obsoleto',                w:10, defOn:false},
+  {key:'administrador',     es:'Administrador',           en:'Administrator',         pt:'Administrador',           w:24, defOn:true},
+  {key:'liderProceso',      es:'Líder de Proceso',        en:'Process Leader',        pt:'Líder de Processo',       w:24, defOn:false},
+  {key:'correoElectronico', es:'Correo Electrónico',      en:'Email',                 pt:'E-mail',                  w:32, defOn:false},
+  {key:'alcanceEmpresas',   es:'Alcance Empresas',        en:'Company Scope',         pt:'Abrangência de Empresas', w:20, defOn:false},
+  {key:'areasAplicables',   es:'Áreas Aplicables',        en:'Applicable Areas',      pt:'Áreas Aplicáveis',        w:22, defOn:false},
+  {key:'idioma',            es:'Idioma',                  en:'Language',              pt:'Idioma',                  w:9,  defOn:false},
+  {key:'docGxP',            es:'Doc. GxP',                en:'GxP Doc',               pt:'Doc. GxP',                w:9,  defOn:false},
+  {key:'docsRelacionados',  es:'Documentos Relacionados', en:'Related Documents',     pt:'Documentos Relacionados', w:22, defOn:false},
+  {key:'mbr',               es:'MBR',                     en:'MBR',                   pt:'MBR',                     w:8,  defOn:false},
+  {key:'tipoPlantilla',     es:'Tipo Plantilla',          en:'Template Type',         pt:'Tipo de Modelo',          w:14, defOn:false},
+  {key:'docIntercompania',  es:'Doc. Intercompañía',      en:'Intercompany Doc',      pt:'Doc. Intercompanhia',     w:16, defOn:false},
 ];
 
 // Deduplicar por key
@@ -22438,15 +23013,15 @@ XLS_COLS_DEF = XLS_COLS_DEF.filter(function(c,i,arr){
 
 // Estados disponibles con color, etiqueta y activado por defecto
 var XLS_ESTADOS_DEF = [
-  {val:'Vigente',           es:'Vigente',             en:'Active',            color:'#006860', bg:'#e6f9f3', defOn:true},
-  {val:'Menos de 5 Meses',  es:'Menos de 5 Meses',    en:'< 5 Months',        color:'#a06000', bg:'#fff9e8', defOn:true},
-  {val:'Menos de 4 Meses',  es:'Menos de 4 Meses',    en:'< 4 Months',        color:'#a06000', bg:'#fff9e8', defOn:true},
-  {val:'Menos de 3 Meses',  es:'Menos de 3 Meses',    en:'< 3 Months',        color:'#856404', bg:'#fff3cd', defOn:true},
-  {val:'Menos de 2 Meses',  es:'Menos de 2 Meses',    en:'< 2 Months',        color:'#856404', bg:'#fff3cd', defOn:true},
-  {val:'Menos de 1 Mes',    es:'Menos de 1 Mes',      en:'< 1 Month',         color:'#856404', bg:'#fff3cd', defOn:true},
-  {val:'Menos de 15 días',  es:'Menos de 15 días',    en:'< 15 days',         color:'#856404', bg:'#fff3cd', defOn:true},
-  {val:'Vencido',           es:'Vencido',             en:'Expired',           color:'#a02020', bg:'#fde8e8', defOn:false},
-  {val:'Obsoleto',          es:'Obsoleto',            en:'Obsolete',          color:'#7a2020', bg:'#f5d5d5', defOn:false},
+  {val:'Vigente',           es:'Vigente',             en:'Active',            pt:'Vigente',           color:'#006860', bg:'#e6f9f3', defOn:true},
+  {val:'Menos de 5 Meses',  es:'Menos de 5 Meses',    en:'< 5 Months',        pt:'< 5 Meses',         color:'#a06000', bg:'#fff9e8', defOn:true},
+  {val:'Menos de 4 Meses',  es:'Menos de 4 Meses',    en:'< 4 Months',        pt:'< 4 Meses',         color:'#a06000', bg:'#fff9e8', defOn:true},
+  {val:'Menos de 3 Meses',  es:'Menos de 3 Meses',    en:'< 3 Months',        pt:'< 3 Meses',         color:'#856404', bg:'#fff3cd', defOn:true},
+  {val:'Menos de 2 Meses',  es:'Menos de 2 Meses',    en:'< 2 Months',        pt:'< 2 Meses',         color:'#856404', bg:'#fff3cd', defOn:true},
+  {val:'Menos de 1 Mes',    es:'Menos de 1 Mes',      en:'< 1 Month',         pt:'< 1 Mês',           color:'#856404', bg:'#fff3cd', defOn:true},
+  {val:'Menos de 15 días',  es:'Menos de 15 días',    en:'< 15 days',         pt:'< 15 dias',         color:'#856404', bg:'#fff3cd', defOn:true},
+  {val:'Vencido',           es:'Vencido',             en:'Expired',           pt:'Vencido',           color:'#a02020', bg:'#fde8e8', defOn:false},
+  {val:'Obsoleto',          es:'Obsoleto',            en:'Obsolete',          pt:'Obsoleto',          color:'#7a2020', bg:'#f5d5d5', defOn:false},
 ];
 
 var _xlsLang = null;
@@ -22454,7 +23029,7 @@ var _xlsLang = null;
 function abrirModalExcelLM(){
   if(!docs||!docs.length){toast('Sin documentos en el listado maestro','er');return;}
   _xlsLang = null;
-  ['xls-op-es','xls-op-en'].forEach(function(id){
+  ['xls-op-es','xls-op-en','xls-op-pt'].forEach(function(id){
     var el=document.getElementById(id);
     if(el){el.style.borderColor='var(--brd)';el.style.background='#fff';}
   });
@@ -22467,10 +23042,13 @@ function abrirModalExcelLM(){
 
 function xlsSelIdioma(lang){
   _xlsLang=lang;
-  ['es','en'].forEach(function(l){
+  ['es','en','pt'].forEach(function(l){
     var el=document.getElementById('xls-op-'+l);
     if(el){el.style.borderColor=l===lang?'var(--T)':'var(--brd)';el.style.background=l===lang?'var(--tl)':'#fff';}
   });
+  // Re-render column and estado labels in the selected language
+  xlsRenderCols();
+  xlsRenderEstados();
   xlsCheckReady();
 }
 
@@ -22486,7 +23064,7 @@ function xlsRenderEstados(){
     return '<label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;'
       +'background:'+e.bg+';border:1.5px solid '+e.color+'33;border-radius:6px;padding:5px 9px;user-select:none">'
       +'<input type="checkbox" id="xls-e-'+i+'" '+(e.defOn?'checked':'')+' style="accent-color:'+e.color+'" onchange="xlsCheckReady()">'
-      +'<span style="font-weight:600;color:'+e.color+'">'+e.es+'</span>'
+      +'<span style="font-weight:600;color:'+e.color+'">'+(_xlsLang==='pt'?(e.pt||e.es):_xlsLang==='en'?e.en:e.es)+'</span>'
       +'</label>';
   }).join('');
 }
@@ -22512,7 +23090,7 @@ function xlsRenderCols(){
     return '<label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;'
       +'background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:5px 8px;user-select:none">'
       +'<input type="checkbox" id="xls-c-'+i+'" '+(c.defOn?'checked':'')+' style="accent-color:var(--T)" onchange="xlsCheckReady()">'
-      +'<span style="font-weight:500">'+c.es+'</span>'
+      +'<span style="font-weight:500">'+(_xlsLang==='pt'?(c.pt||c.es):_xlsLang==='en'?c.en:c.es)+'</span>'
       +'</label>';
   }).join('');
   xlsCheckReady();
@@ -22553,6 +23131,8 @@ function xlsCheckReady(){
 function generarExcelLM(){
   var lang=_xlsLang; if(!lang) return;
   var es=lang==='es';
+  var pt=lang==='pt';
+  var en=lang==='en';
 
   var selectedCols=XLS_COLS_DEF.filter(function(_,i){
     var el=document.getElementById('xls-c-'+i); return el&&el.checked;
@@ -22564,34 +23144,297 @@ function generarExcelLM(){
   }).map(function(e){return e.val;});
   if(!selectedEstados.length){toast('Selecciona al menos un estado','er');return;}
 
-  // Incluir Obsoleto si el usuario lo marcó (por campo obsoleto también)
   var incluirObsoletos=selectedEstados.indexOf('Obsoleto')>=0;
-
   var data=(docs||[]).filter(function(d){
     var esObs=d.estado==='Obsoleto'||d.obsoleto==='X'||d.obsoleto==='Si'||d.obsoleto==='Sí';
     if(esObs) return incluirObsoletos;
     return selectedEstados.indexOf(d.estado)>=0;
   });
 
-  if(!data.length){toast(es?'Sin documentos con los estados seleccionados':'No documents match the selected statuses','er');return;}
+  if(!data.length){
+    toast(es?'Sin documentos':pt?'Sem documentos':'No documents','er');
+    return;
+  }
   closeMo('mo-lm-excel');
+
+  if(es){
+    // Español: sin traducción, generar directamente
+    _generarExcelConDatos(data, selectedCols, selectedEstados, lang);
+  } else {
+    // EN o PT: traducir todo el contenido via API antes de generar
+    _generarExcelConTraduccion(data, selectedCols, selectedEstados, lang);
+  }
+}
+
+// ============================================================
+// TRADUCTOR LOCAL ES->EN/PT (sin conexion a internet)
+// ============================================================
+// Diccionario tecnico de gestion documental/calidad farmaceutica,
+// generado para este listado maestro. Traduccion instantanea, sin
+// llamadas de red -- funciona aunque la red bloquee servicios externos.
+var _TR_WORDS_EN = {"manejo": "handling", "limpieza": "cleaning", "control": "control", "registro": "record", "registros": "records", "reporte": "report", "reportes": "reports", "uso": "use", "gestion": "management", "gestión": "management", "mantenimiento": "maintenance", "analisis": "analysis", "análisis": "analysis", "analiticos": "analytical", "analíticos": "analytical", "analitico": "analytical", "analítico": "analytical", "bitacora": "logbook", "bitácora": "logbook", "bitacoras": "logbooks", "verificacion": "verification", "verificación": "verification", "operacion": "operation", "operación": "operation", "operaciones": "operations", "operacional": "operational", "sistema": "system", "sistemas": "systems", "listado": "list", "lista": "list", "identificacion": "identification", "identificación": "identification", "muestras": "samples", "muestra": "sample", "muestreo": "sampling", "producto": "product", "productos": "products", "equipo": "equipment", "equipos": "equipment", "solicitud": "request", "inspeccion": "inspection", "inspección": "inspection", "inspecciones": "inspections", "programa": "program", "proceso": "process", "procesos": "processes", "procedimiento": "procedure", "empaque": "packaging", "plan": "plan", "materiales": "materials", "material": "material", "entrega": "delivery", "evaluacion": "evaluation", "evaluación": "evaluation", "calidad": "quality", "etiqueta": "label", "etiquetas": "labels", "desarrollo": "development", "seguridad": "safety", "maquina": "machine", "máquina": "machine", "maquinas": "machines", "máquinas": "machines", "area": "area", "área": "area", "areas": "areas", "áreas": "areas", "maestro": "master", "maestros": "master", "datos": "data", "chequeo": "check", "trabajo": "work", "revision": "review", "revisión": "review", "desinfeccion": "disinfection", "desinfección": "disinfection", "recepcion": "reception", "recepción": "reception", "temperatura": "temperature", "manual": "manual", "capsulas": "capsules", "cápsulas": "capsules", "capsula": "capsule", "cápsula": "capsule", "investigacion": "investigation", "investigación": "investigation", "investigaciones": "investigations", "primas": "raw", "materias": "raw materials", "personal": "personnel", "proveedores": "suppliers", "almacenamiento": "storage", "entrenamiento": "training", "instructivo": "instructions", "agua": "water", "gelatina": "gelatin", "estabilidad": "stability", "calificacion": "qualification", "calificación": "qualification", "administracion": "administration", "administración": "administration", "calibracion": "calibration", "calibración": "calibration", "terminado": "finished", "terminados": "finished", "matriz": "matrix", "estandares": "standards", "estándares": "standards", "estandar": "standard", "estándar": "standard", "documentos": "documents", "documento": "document", "soluciones": "solutions", "solucion": "solution", "solución": "solution", "residuos": "waste", "ingreso": "entry", "fabricacion": "manufacturing", "fabricación": "manufacturing", "instrumentos": "instruments", "humedad": "humidity", "preventivo": "preventive", "microbiologico": "microbiological", "microbiológico": "microbiological", "microbiologia": "microbiology", "microbiología": "microbiology", "preparacion": "preparation", "preparación": "preparation", "informe": "report", "informes": "reports", "informacion": "information", "información": "information", "norma": "standard", "normas": "standards", "interna": "internal", "interno": "internal", "internos": "internal", "hormonales": "hormonal", "desempeño": "performance", "servicios": "services", "servicio": "service", "manufactura": "manufacturing", "medicion": "measurement", "medición": "measurement", "fase": "phase", "caso": "case", "ambientales": "environmental", "ambiental": "environmental", "cabina": "cabinet", "politica": "policy", "política": "policy", "sanitizacion": "sanitization", "sanitización": "sanitization", "produccion": "production", "producción": "production", "final": "final", "ordenes": "orders", "órdenes": "orders", "orden": "order", "reactivos": "reagents", "usuario": "user", "usuarios": "users", "contable": "accounting", "lavado": "washing", "liquidos": "liquids", "líquidos": "liquids", "activos": "active", "activo": "active", "bodega": "warehouse", "destruccion": "destruction", "destrucción": "destruction", "linea": "line", "línea": "line", "creacion": "creation", "creación": "creation", "hojas": "sheets", "hoja": "sheet", "piloto": "pilot", "validacion": "validation", "validación": "validation", "validaciones": "validations", "reactor": "reactor", "inventario": "inventory", "inventarios": "inventories", "dispensacion": "dispensing", "dispensación": "dispensing", "envase": "container", "despeje": "clearance", "medios": "media", "plantilla": "template", "negocio": "business", "granel": "bulk", "libro": "book", "libros": "books", "materia": "matter", "riesgo": "risk", "riesgos": "risks", "disposicion": "disposal", "disposición": "disposal", "modulo": "module", "módulo": "module", "tabletas": "tablets", "diario": "daily", "actividades": "activities", "actividad": "activity", "fallas": "failures", "falla": "failure", "blister": "blister", "integral": "integral", "controles": "controls", "elaboracion": "preparation", "elaboración": "preparation", "prima": "raw", "recibo": "receipt", "pesaje": "weighing", "continuidad": "continuity", "metodos": "methods", "métodos": "methods", "metodo": "method", "método": "method", "purificada": "purified", "protocolo": "protocol", "plantas": "plants", "planta": "plant", "secado": "drying", "cremas": "creams", "crema": "cream", "condiciones": "conditions", "balanza": "scale", "balanzas": "scales", "modelo": "model", "seguimiento": "follow-up", "flujo": "flow", "usp": "USP", "gmp": "GMP", "distribucion": "distribution", "distribución": "distribution", "clientes": "customers", "cliente": "customer", "auditorias": "audits", "auditoria": "audit", "auditoría": "audit", "cambios": "changes", "cambio": "change", "anual": "annual", "caracterizacion": "characterization", "caracterización": "characterization", "secundario": "secondary", "secundarios": "secondary", "aire": "air", "transferencia": "transfer", "blanda": "soft", "blandas": "soft", "guia": "guide", "guía": "guide", "corporativa": "corporate", "salud": "health", "controladas": "controlled", "suministro": "supply", "alistamiento": "readiness", "salida": "output", "proyectos": "projects", "proyecto": "project", "prueba": "test", "pruebas": "tests", "nuevos": "new", "nuevo": "new", "aprobacion": "approval", "aprobación": "approval", "estado": "status", "carta": "letter", "correctivo": "corrective", "cultivo": "culture", "visual": "visual", "gases": "gases", "gas": "gas", "documentacion": "documentation", "documentación": "documentation", "tanques": "tanks", "tanque": "tank", "computarizados": "computerized", "toma": "collection", "fisica": "physical", "física": "physical", "autorizacion": "authorization", "autorización": "authorization", "determinacion": "determination", "determinación": "determination", "automatico": "automatic", "automático": "automatic", "dosificacion": "dosing", "dosificación": "dosing", "insumos": "supplies", "cumplimiento": "compliance", "columnas": "columns", "cierre": "closing", "acondicionamiento": "conditioning", "usa": "uses", "software": "software", "encapsuladora": "encapsulation machine", "retencion": "retention", "retención": "retention", "cuarto": "room", "copias": "copies", "copia": "copy", "polvos": "powders", "polvo": "powder", "comisiones": "commissions", "compra": "purchase", "ventas": "sales", "devolucion": "return", "devolución": "return", "devoluciones": "returns", "eventos": "events", "evento": "event", "trazas": "traces", "relativa": "relative", "vida": "life", "instrucciones": "instructions", "jefe": "head", "especificaciones": "specifications", "especificacion": "specification", "especificación": "specification", "entrada": "entry", "otros": "others", "utensilios": "utensils", "transporte": "transport", "cronograma": "schedule", "asignacion": "assignment", "asignación": "assignment", "impacto": "impact", "analizador": "analyzer", "asociados": "associated", "actualizacion": "update", "actualización": "update", "lote": "batch", "seleccion": "selection", "selección": "selection", "despacho": "dispatch", "primarios": "primary", "primario": "primary", "archivo": "file", "diferencial": "differential", "especiales": "special", "especial": "special", "sustancias": "substances", "sustancia": "substance", "baño": "bath", "agitador": "agitator", "emergencia": "emergency", "medicina": "medicine", "criticos": "critical", "críticos": "critical", "critico": "critical", "crítico": "critical", "mezclador": "mixer", "medicamentos": "medicines", "atributos": "attributes", "disolucion": "dissolution", "disolución": "dissolution", "modificacion": "modification", "modificación": "modification", "tecnicas": "technical", "técnicas": "technical", "tecnica": "technical", "técnica": "technical", "descripcion": "description", "descripción": "description", "impresion": "printing", "impresión": "printing", "nevera": "refrigerator", "dotacion": "provision", "dotación": "provision", "almacen": "warehouse", "almacén": "warehouse", "autoclave": "autoclave", "proteccion": "protection", "protección": "protection", "rotulo": "label", "rótulo": "label", "peligrosos": "hazardous", "peligroso": "hazardous", "vigilancia": "surveillance", "fisicoquimico": "physicochemical", "fisicoquímico": "physicochemical", "aceptacion": "acceptance", "aceptación": "acceptance", "requisitos": "requirements", "requisito": "requirement", "consumo": "consumption", "recoleccion": "collection", "recolección": "collection", "cadena": "chain", "caja": "box", "tamaño": "size", "bienes": "goods", "tratamiento": "treatment", "generacion": "generation", "generación": "generation", "monitoreo": "monitoring", "presion": "pressure", "presión": "pressure", "certificado": "certificate", "base": "base", "vehiculo": "vehicle", "vehículo": "vehicle", "director": "director", "directora": "director", "gomas": "gums", "moldes": "molds", "molde": "mold", "laboratorios": "laboratories", "laboratorio": "laboratory", "general": "general", "generales": "general", "concentracion": "concentration", "concentración": "concentration", "comunicacion": "communication", "comunicación": "communication", "macroproceso": "macroprocess", "llenado": "filling", "dispositivos": "devices", "medicos": "medical", "médicos": "medical", "precision": "precision", "precisión": "precision", "detector": "detector", "ultrasonido": "ultrasound", "diagnostico": "diagnosis", "diagnóstico": "diagnosis", "formula": "formula", "fórmula": "formula", "cepas": "strains", "mercancia": "merchandise", "mercancía": "merchandise", "ejecucion": "execution", "ejecución": "execution", "cargos": "positions", "cargo": "position", "calculo": "calculation", "cálculo": "calculation", "peso": "weight", "conciliacion": "reconciliation", "conciliación": "reconciliation", "bomba": "pump", "puntos": "points", "punto": "point", "empleados": "employees", "funcionamiento": "operation", "comprimido": "tablet", "centro": "center", "entre": "between", "gastos": "expenses", "manipulacion": "handling", "manipulación": "handling", "principios": "principles", "principio": "principle", "calentamiento": "heating", "potable": "drinking", "camara": "chamber", "cámara": "chamber", "legales": "legal", "legal": "legal", "artes": "artwork", "arte": "art", "relacion": "relation", "relación": "relation", "encapsulado": "encapsulated", "generados": "generated", "terceros": "third parties", "tercero": "third party", "incidentes": "incidents", "incidente": "incident", "bombo": "drum", "envasadora": "filling machine", "derrames": "spills", "derrame": "spill", "infraestructura": "infrastructure", "productivas": "productive", "productivo": "productive", "apertura": "opening", "envio": "shipment", "envío": "shipment", "devengado": "accrued", "pago": "payment", "pagos": "payments", "cobro": "collection", "facturacion": "invoicing", "facturación": "invoicing", "exportacion": "export", "exportación": "export", "importacion": "import", "importación": "import", "embarque": "shipment", "vencimiento": "expiration", "vigencia": "validity", "codigo": "code", "código": "code", "codigos": "codes", "códigos": "codes", "numero": "number", "número": "number", "clasificacion": "classification", "clasificación": "classification", "asignaciones": "assignments", "consolidado": "consolidated", "anexo": "annex", "anexos": "annexes", "formatos": "forms", "plantillas": "templates", "historial": "history", "reglamento": "regulation", "reglamentos": "regulations", "ficha": "form", "fichas": "forms", "constancia": "certification", "autorizado": "authorized", "autorizados": "authorized", "autorizada": "authorized", "pendiente": "pending", "pendientes": "pending", "aprobado": "approved", "aprobados": "approved", "confidencial": "confidential", "externo": "external", "externa": "external", "externos": "external", "tercerizado": "outsourced", "integracion": "integration", "integración": "integration", "optimizacion": "optimization", "optimización": "optimization", "planeacion": "planning", "planeación": "planning", "planificacion": "planning", "planificación": "planning", "recursos": "resources", "recurso": "resource", "humanos": "human", "financiero": "financial", "financiera": "financial", "contabilidad": "accounting", "presupuesto": "budget", "logistica": "logistics", "logística": "logistics", "despachos": "dispatches", "abastecimiento": "supply", "stock": "stock", "existencias": "inventory", "movimientos": "movements", "movimiento": "movement", "conteo": "count", "ajuste": "adjustment", "ajustes": "adjustments", "baja": "write-off", "bajas": "write-offs", "alta": "high", "altas": "high", "activacion": "activation", "activación": "activation", "desactivacion": "deactivation", "desactivación": "deactivation", "notificacion": "notification", "notificación": "notification", "notificaciones": "notifications", "alerta": "alert", "alertas": "alerts", "accion": "action", "acción": "action", "acciones": "actions", "plan de accion": "action plan", "capa": "CAPA", "desviacion": "deviation", "desviación": "deviation", "desviaciones": "deviations", "reclamo": "claim", "reclamos": "claims", "queja": "complaint", "quejas": "complaints", "satisfaccion": "satisfaction", "satisfacción": "satisfaction", "encuesta": "survey", "encuestas": "surveys", "indicador": "indicator", "indicadores": "indicators", "metas": "goals", "meta": "goal", "objetivos": "objectives", "objetivo": "objective", "estrategia": "strategy", "estrategico": "strategic", "estratégico": "strategic", "contrato": "contract", "contratos": "contracts", "contratacion": "hiring", "contratación": "hiring", "induccion": "induction", "inducción": "induction", "capacitacion": "training", "capacitación": "training", "competencias": "competencies", "competencia": "competency", "vacaciones": "vacation", "licencias": "leaves", "licencia": "leave", "nomina": "payroll", "nómina": "payroll", "beneficios": "benefits", "beneficio": "benefit", "compensacion": "compensation", "compensación": "compensation", "viajes": "travel", "viaje": "travel", "reembolso": "reimbursement", "reembolsos": "reimbursements", "gasto": "expense", "viaticos": "travel allowance", "viáticos": "travel allowance", "formato": "form", "acta": "minutes", "actas": "minutes", "resultados": "results", "resultado": "result", "incendio": "fire", "compras": "purchases", "sanitizantes": "sanitizers", "sanitizante": "sanitizer", "progesterona": "progesterone", "visible": "visible", "disolutor": "dissolution tester", "checklist": "checklist", "bogota": "Bogota", "trea": "Trea", "referencia": "reference", "referencias": "references", "patron": "standard", "patrón": "standard", "patrones": "standards", "lineamientos": "guidelines", "lineamiento": "guideline", "organizacion": "organization", "organización": "organization", "organizaciones": "organizations", "politicas": "policies", "políticas": "policies", "estructura": "structure", "funciones": "functions", "funcion": "function", "función": "function", "responsabilidades": "responsibilities", "responsabilidad": "responsibility", "roles": "roles", "rol": "role", "definicion": "definition", "definición": "definition", "definiciones": "definitions", "conceptos": "concepts", "concepto": "concept", "alcance": "scope", "objeto": "purpose", "glosario": "glossary"};
+var _TR_WORDS_PT = {"manejo": "manuseio", "limpieza": "limpeza", "control": "controle", "registro": "registro", "registros": "registros", "reporte": "relatório", "reportes": "relatórios", "uso": "uso", "gestion": "gestão", "gestión": "gestão", "mantenimiento": "manutenção", "analisis": "análise", "análisis": "análise", "analiticos": "analíticos", "analíticos": "analíticos", "analitico": "analítico", "analítico": "analítico", "bitacora": "diário de bordo", "bitácora": "diário de bordo", "bitacoras": "diários de bordo", "verificacion": "verificação", "verificación": "verificação", "operacion": "operação", "operación": "operação", "operaciones": "operações", "operacional": "operacional", "sistema": "sistema", "sistemas": "sistemas", "listado": "lista", "lista": "lista", "identificacion": "identificação", "identificación": "identificação", "muestras": "amostras", "muestra": "amostra", "muestreo": "amostragem", "producto": "produto", "productos": "produtos", "equipo": "equipamento", "equipos": "equipamentos", "solicitud": "solicitação", "inspeccion": "inspeção", "inspección": "inspeção", "inspecciones": "inspeções", "programa": "programa", "proceso": "processo", "procesos": "processos", "procedimiento": "procedimento", "empaque": "embalagem", "plan": "plano", "materiales": "materiais", "material": "material", "entrega": "entrega", "evaluacion": "avaliação", "evaluación": "avaliação", "calidad": "qualidade", "etiqueta": "rótulo", "etiquetas": "rótulos", "desarrollo": "desenvolvimento", "seguridad": "segurança", "maquina": "máquina", "máquina": "máquina", "maquinas": "máquinas", "máquinas": "máquinas", "area": "área", "área": "área", "areas": "áreas", "áreas": "áreas", "maestro": "mestre", "maestros": "mestre", "datos": "dados", "chequeo": "verificação", "trabajo": "trabalho", "revision": "revisão", "revisión": "revisão", "desinfeccion": "desinfecção", "desinfección": "desinfecção", "recepcion": "recepção", "recepción": "recepção", "temperatura": "temperatura", "manual": "manual", "capsulas": "cápsulas", "cápsulas": "cápsulas", "capsula": "cápsula", "cápsula": "cápsula", "investigacion": "investigação", "investigación": "investigação", "investigaciones": "investigações", "primas": "matérias-primas", "materias": "matérias-primas", "personal": "pessoal", "proveedores": "fornecedores", "almacenamiento": "armazenamento", "entrenamiento": "treinamento", "instructivo": "instrutivo", "agua": "água", "gelatina": "gelatina", "estabilidad": "estabilidade", "calificacion": "qualificação", "calificación": "qualificação", "administracion": "administração", "administración": "administração", "calibracion": "calibração", "calibración": "calibração", "terminado": "acabado", "terminados": "acabados", "matriz": "matriz", "estandares": "padrões", "estándares": "padrões", "estandar": "padrão", "estándar": "padrão", "documentos": "documentos", "documento": "documento", "soluciones": "soluções", "solucion": "solução", "solución": "solução", "residuos": "resíduos", "ingreso": "entrada", "fabricacion": "fabricação", "fabricación": "fabricação", "instrumentos": "instrumentos", "humedad": "umidade", "preventivo": "preventivo", "microbiologico": "microbiológico", "microbiológico": "microbiológico", "microbiologia": "microbiologia", "microbiología": "microbiologia", "preparacion": "preparação", "preparación": "preparação", "informe": "relatório", "informes": "relatórios", "informacion": "informação", "información": "informação", "norma": "norma", "normas": "normas", "interna": "interna", "interno": "interno", "internos": "internos", "hormonales": "hormonais", "desempeño": "desempenho", "servicios": "serviços", "servicio": "serviço", "manufactura": "manufatura", "medicion": "medição", "medición": "medição", "fase": "fase", "caso": "caso", "ambientales": "ambientais", "ambiental": "ambiental", "cabina": "cabine", "politica": "política", "política": "política", "sanitizacion": "sanitização", "sanitización": "sanitização", "produccion": "produção", "producción": "produção", "final": "final", "ordenes": "ordens", "órdenes": "ordens", "orden": "ordem", "reactivos": "reagentes", "usuario": "usuário", "usuarios": "usuários", "contable": "contábil", "lavado": "lavagem", "liquidos": "líquidos", "líquidos": "líquidos", "activos": "ativos", "activo": "ativo", "bodega": "armazém", "destruccion": "destruição", "destrucción": "destruição", "linea": "linha", "línea": "linha", "creacion": "criação", "creación": "criação", "hojas": "folhas", "hoja": "folha", "piloto": "piloto", "validacion": "validação", "validación": "validação", "validaciones": "validações", "reactor": "reator", "inventario": "inventário", "inventarios": "inventários", "dispensacion": "dispensação", "dispensación": "dispensação", "envase": "embalagem", "despeje": "liberação", "medios": "meios", "plantilla": "modelo", "negocio": "negócio", "granel": "granel", "libro": "livro", "libros": "livros", "materia": "matéria", "riesgo": "risco", "riesgos": "riscos", "disposicion": "disposição", "disposición": "disposição", "modulo": "módulo", "módulo": "módulo", "tabletas": "comprimidos", "diario": "diário", "actividades": "atividades", "actividad": "atividade", "fallas": "falhas", "falla": "falha", "blister": "blister", "integral": "integral", "controles": "controles", "elaboracion": "elaboração", "elaboración": "elaboração", "prima": "prima", "recibo": "recibo", "pesaje": "pesagem", "continuidad": "continuidade", "metodos": "métodos", "métodos": "métodos", "metodo": "método", "método": "método", "purificada": "purificada", "protocolo": "protocolo", "plantas": "plantas", "planta": "planta", "secado": "secagem", "cremas": "cremes", "crema": "creme", "condiciones": "condições", "balanza": "balança", "balanzas": "balanças", "modelo": "modelo", "seguimiento": "acompanhamento", "flujo": "fluxo", "usp": "USP", "gmp": "GMP", "distribucion": "distribuição", "distribución": "distribuição", "clientes": "clientes", "cliente": "cliente", "auditorias": "auditorias", "auditoria": "auditoria", "auditoría": "auditoria", "cambios": "alterações", "cambio": "alteração", "anual": "anual", "caracterizacion": "caracterização", "caracterización": "caracterização", "secundario": "secundário", "secundarios": "secundários", "aire": "ar", "transferencia": "transferência", "blanda": "mole", "blandas": "moles", "guia": "guia", "guía": "guia", "corporativa": "corporativa", "salud": "saúde", "controladas": "controladas", "suministro": "suprimento", "alistamiento": "preparação", "salida": "saída", "proyectos": "projetos", "proyecto": "projeto", "prueba": "teste", "pruebas": "testes", "nuevos": "novos", "nuevo": "novo", "aprobacion": "aprovação", "aprobación": "aprovação", "estado": "status", "carta": "carta", "correctivo": "corretivo", "cultivo": "cultivo", "visual": "visual", "gases": "gases", "gas": "gás", "documentacion": "documentação", "documentación": "documentação", "tanques": "tanques", "tanque": "tanque", "computarizados": "computadorizados", "toma": "coleta", "fisica": "física", "física": "física", "autorizacion": "autorização", "autorización": "autorização", "determinacion": "determinação", "determinación": "determinação", "automatico": "automático", "automático": "automático", "dosificacion": "dosagem", "dosificación": "dosagem", "insumos": "insumos", "cumplimiento": "conformidade", "columnas": "colunas", "cierre": "fechamento", "acondicionamiento": "acondicionamento", "usa": "usa", "software": "software", "encapsuladora": "encapsuladora", "retencion": "retenção", "retención": "retenção", "cuarto": "sala", "copias": "cópias", "copia": "cópia", "polvos": "pós", "polvo": "pó", "comisiones": "comissões", "compra": "compra", "ventas": "vendas", "devolucion": "devolução", "devolución": "devolução", "devoluciones": "devoluções", "eventos": "eventos", "evento": "evento", "trazas": "traços", "relativa": "relativa", "vida": "vida", "instrucciones": "instruções", "jefe": "chefe", "especificaciones": "especificações", "especificacion": "especificação", "especificación": "especificação", "entrada": "entrada", "otros": "outros", "utensilios": "utensílios", "transporte": "transporte", "cronograma": "cronograma", "asignacion": "atribuição", "asignación": "atribuição", "impacto": "impacto", "analizador": "analisador", "asociados": "associados", "actualizacion": "atualização", "actualización": "atualização", "lote": "lote", "seleccion": "seleção", "selección": "seleção", "despacho": "despacho", "primarios": "primários", "primario": "primário", "archivo": "arquivo", "diferencial": "diferencial", "especiales": "especiais", "especial": "especial", "sustancias": "substâncias", "sustancia": "substância", "baño": "banho", "agitador": "agitador", "emergencia": "emergência", "medicina": "medicina", "criticos": "críticos", "críticos": "críticos", "critico": "crítico", "crítico": "crítico", "mezclador": "misturador", "medicamentos": "medicamentos", "atributos": "atributos", "disolucion": "dissolução", "disolución": "dissolução", "modificacion": "modificação", "modificación": "modificação", "tecnicas": "técnicas", "técnicas": "técnicas", "tecnica": "técnica", "técnica": "técnica", "descripcion": "descrição", "descripción": "descrição", "impresion": "impressão", "impresión": "impressão", "nevera": "geladeira", "dotacion": "dotação", "dotación": "dotação", "almacen": "armazém", "almacén": "armazém", "autoclave": "autoclave", "proteccion": "proteção", "protección": "proteção", "rotulo": "rótulo", "rótulo": "rótulo", "peligrosos": "perigosos", "peligroso": "perigoso", "vigilancia": "vigilância", "fisicoquimico": "físico-químico", "fisicoquímico": "físico-químico", "aceptacion": "aceitação", "aceptación": "aceitação", "requisitos": "requisitos", "requisito": "requisito", "consumo": "consumo", "recoleccion": "coleta", "recolección": "coleta", "cadena": "cadeia", "caja": "caixa", "tamaño": "tamanho", "bienes": "bens", "tratamiento": "tratamento", "generacion": "geração", "generación": "geração", "monitoreo": "monitoramento", "presion": "pressão", "presión": "pressão", "certificado": "certificado", "base": "base", "vehiculo": "veículo", "vehículo": "veículo", "director": "diretor", "directora": "diretora", "gomas": "gomas", "moldes": "moldes", "molde": "molde", "laboratorios": "laboratórios", "laboratorio": "laboratório", "general": "geral", "generales": "gerais", "concentracion": "concentração", "concentración": "concentração", "comunicacion": "comunicação", "comunicación": "comunicação", "macroproceso": "macroprocesso", "llenado": "enchimento", "dispositivos": "dispositivos", "medicos": "médicos", "médicos": "médicos", "precision": "precisão", "precisión": "precisão", "detector": "detector", "ultrasonido": "ultrassom", "diagnostico": "diagnóstico", "diagnóstico": "diagnóstico", "formula": "fórmula", "fórmula": "fórmula", "cepas": "cepas", "mercancia": "mercadoria", "mercancía": "mercadoria", "ejecucion": "execução", "ejecución": "execução", "cargos": "cargos", "cargo": "cargo", "calculo": "cálculo", "cálculo": "cálculo", "peso": "peso", "conciliacion": "conciliação", "conciliación": "conciliação", "bomba": "bomba", "puntos": "pontos", "punto": "ponto", "empleados": "empregados", "funcionamiento": "funcionamento", "comprimido": "comprimido", "centro": "centro", "entre": "entre", "gastos": "despesas", "manipulacion": "manuseio", "manipulación": "manuseio", "principios": "princípios", "principio": "princípio", "calentamiento": "aquecimento", "potable": "potável", "camara": "câmara", "cámara": "câmara", "legales": "legais", "legal": "legal", "artes": "artes", "arte": "arte", "relacion": "relação", "relación": "relação", "encapsulado": "encapsulado", "generados": "gerados", "terceros": "terceiros", "tercero": "terceiro", "incidentes": "incidentes", "incidente": "incidente", "bombo": "tambor", "envasadora": "envasadora", "derrames": "derramamentos", "derrame": "derramamento", "infraestructura": "infraestrutura", "productivas": "produtivas", "productivo": "produtivo", "apertura": "abertura", "envio": "envio", "envío": "envio", "devengado": "provisionado", "pago": "pagamento", "pagos": "pagamentos", "cobro": "cobrança", "facturacion": "faturamento", "facturación": "faturamento", "exportacion": "exportação", "exportación": "exportação", "importacion": "importação", "importación": "importação", "embarque": "embarque", "vencimiento": "vencimento", "vigencia": "vigência", "codigo": "código", "código": "código", "codigos": "códigos", "códigos": "códigos", "numero": "número", "número": "número", "clasificacion": "classificação", "clasificación": "classificação", "asignaciones": "atribuições", "consolidado": "consolidado", "anexo": "anexo", "anexos": "anexos", "formatos": "formulários", "plantillas": "modelos", "historial": "histórico", "reglamento": "regulamento", "reglamentos": "regulamentos", "ficha": "ficha", "fichas": "fichas", "constancia": "comprovante", "autorizado": "autorizado", "autorizados": "autorizados", "autorizada": "autorizada", "pendiente": "pendente", "pendientes": "pendentes", "aprobado": "aprovado", "aprobados": "aprovados", "confidencial": "confidencial", "externo": "externo", "externa": "externa", "externos": "externos", "tercerizado": "terceirizado", "integracion": "integração", "integración": "integração", "optimizacion": "otimização", "optimización": "otimização", "planeacion": "planejamento", "planeación": "planejamento", "planificacion": "planejamento", "planificación": "planejamento", "recursos": "recursos", "recurso": "recurso", "humanos": "humanos", "financiero": "financeiro", "financiera": "financeira", "contabilidad": "contabilidade", "presupuesto": "orçamento", "logistica": "logística", "logística": "logística", "despachos": "despachos", "abastecimiento": "abastecimento", "stock": "estoque", "existencias": "estoque", "movimientos": "movimentações", "movimiento": "movimentação", "conteo": "contagem", "ajuste": "ajuste", "ajustes": "ajustes", "baja": "baixa", "bajas": "baixas", "alta": "alta", "altas": "altas", "activacion": "ativação", "activación": "ativação", "desactivacion": "desativação", "desactivación": "desativação", "notificacion": "notificação", "notificación": "notificação", "notificaciones": "notificações", "alerta": "alerta", "alertas": "alertas", "accion": "ação", "acción": "ação", "acciones": "ações", "plan de accion": "plano de ação", "capa": "CAPA", "desviacion": "desvio", "desviación": "desvio", "desviaciones": "desvios", "reclamo": "reclamação", "reclamos": "reclamações", "queja": "queixa", "quejas": "queixas", "satisfaccion": "satisfação", "satisfacción": "satisfação", "encuesta": "pesquisa", "encuestas": "pesquisas", "indicador": "indicador", "indicadores": "indicadores", "metas": "metas", "meta": "meta", "objetivos": "objetivos", "objetivo": "objetivo", "estrategia": "estratégia", "estrategico": "estratégico", "estratégico": "estratégico", "contrato": "contrato", "contratos": "contratos", "contratacion": "contratação", "contratación": "contratação", "induccion": "indução", "inducción": "indução", "capacitacion": "capacitação", "capacitación": "capacitação", "competencias": "competências", "competencia": "competência", "vacaciones": "férias", "licencias": "licenças", "licencia": "licença", "nomina": "folha de pagamento", "nómina": "folha de pagamento", "beneficios": "benefícios", "beneficio": "benefício", "compensacion": "compensação", "compensación": "compensação", "viajes": "viagens", "viaje": "viagem", "reembolso": "reembolso", "reembolsos": "reembolsos", "gasto": "despesa", "viaticos": "diárias", "viáticos": "diárias", "formato": "formulário", "acta": "ata", "actas": "atas", "resultados": "resultados", "resultado": "resultado", "incendio": "incêndio", "compras": "compras", "sanitizantes": "sanitizantes", "sanitizante": "sanitizante", "progesterona": "progesterona", "visible": "visível", "disolutor": "dissolutor", "checklist": "checklist", "bogota": "Bogotá", "trea": "Trea", "referencia": "referência", "referencias": "referências", "patron": "padrão", "patrón": "padrão", "patrones": "padrões", "lineamientos": "diretrizes", "lineamiento": "diretriz", "organizacion": "organização", "organización": "organização", "organizaciones": "organizações", "politicas": "políticas", "políticas": "políticas", "estructura": "estrutura", "funciones": "funções", "funcion": "função", "función": "função", "responsabilidades": "responsabilidades", "responsabilidad": "responsabilidade", "roles": "funções", "rol": "função", "definicion": "definição", "definición": "definição", "definiciones": "definições", "conceptos": "conceitos", "concepto": "conceito", "alcance": "escopo", "objeto": "objeto", "glosario": "glossário"};
+var _TR_FUNC_EN = {"de": "of", "del": "of the", "de la": "of the", "en": "in", "para": "for", "la": "the", "el": "the", "los": "the", "las": "the", "y": "and", "e": "and", "o": "or", "a": "to", "al": "to the", "con": "with", "por": "by", "sin": "without", "no": "not", "entre": "between", "sobre": "on", "segun": "according to", "según": "according to", "desde": "from", "hasta": "to", "fuera": "outside", "i": "and"};
+var _TR_FUNC_PT = {"de": "de", "del": "do", "de la": "da", "en": "em", "para": "para", "la": "a", "el": "o", "los": "os", "las": "as", "y": "e", "e": "e", "o": "ou", "a": "a", "al": "ao", "con": "com", "por": "por", "sin": "sem", "no": "não", "entre": "entre", "sobre": "sobre", "segun": "conforme", "según": "conforme", "desde": "desde", "hasta": "até", "fuera": "fora", "i": "e"};
+var _TR_FRASES_EN = {"listado maestro": "master list", "plan de gestion integral": "integral management plan", "plan de gestión integral": "integral management plan", "manual de usuario final": "final user manual", "manual de usuario": "user manual", "manejo y limpieza": "handling and cleaning", "operacion y limpieza": "operation and cleaning", "operación y limpieza": "operation and cleaning", "listado maestro de": "master list of"};
+var _TR_FRASES_PT = {"listado maestro": "lista mestra", "plan de gestion integral": "plano de gestão integral", "plan de gestión integral": "plano de gestão integral", "manual de usuario final": "manual do usuário final", "manual de usuario": "manual do usuário", "manejo y limpieza": "manuseio e limpeza", "operacion y limpieza": "operação e limpeza", "operación y limpieza": "operação e limpeza", "listado maestro de": "lista mestra de"};
+
+function _trCapFirst(w){ return w ? w.charAt(0).toUpperCase()+w.slice(1) : w; }
+
+var _TR_CONTRACCIONES_PT = [
+  [/\b[Ee]m [Aa]s\b/g,'nas'], [/\b[Ee]m [Oo]s\b/g,'nos'],
+  [/\b[Ee]m [Aa]\b/g,'na'],   [/\b[Ee]m [Oo]\b/g,'no'],
+  [/\b[Dd]e [Aa]s\b/g,'das'], [/\b[Dd]e [Oo]s\b/g,'dos'],
+  [/\b[Dd]e [Aa]\b/g,'da'],   [/\b[Dd]e [Oo]\b/g,'do'],
+  [/\b[Aa] [Aa]s\b/g,'às'],   [/\b[Aa] [Oo]s\b/g,'aos'],
+  [/\b[Aa] [Aa]\b/g,'à'],     [/\b[Aa] [Oo]\b/g,'ao']
+];
+function _trContraerPT(texto){
+  _TR_CONTRACCIONES_PT.forEach(function(par){
+    texto = texto.replace(par[0], function(m){
+      return /^[A-ZÁÉÍÓÚÑ]/.test(m) ? _trCapFirst(par[1]) : par[1];
+    });
+  });
+  return texto;
+}
+
+// Traduce texto en español a 'en' o 'pt' usando el diccionario local.
+// No depende de internet. Los nombres propios, marcas de máquinas y siglas
+// (palabras en MAYÚSCULAS de más de 1 letra) se dejan tal cual, que es lo
+// correcto para títulos de documentos técnicos.
+function traducirLocal(texto, idioma){
+  if(!texto) return '';
+  var WORDS = idioma==='pt' ? _TR_WORDS_PT : _TR_WORDS_EN;
+  var FUNC  = idioma==='pt' ? _TR_FUNC_PT  : _TR_FUNC_EN;
+  var FRASES= idioma==='pt' ? _TR_FRASES_PT: _TR_FRASES_EN;
+
+  var lowTexto = texto.toLowerCase();
+  var frasesKeys = Object.keys(FRASES).sort(function(a,b){ return b.length-a.length; });
+  for(var fi=0; fi<frasesKeys.length; fi++){
+    var frase = frasesKeys[fi];
+    if(lowTexto.indexOf(frase)===0){
+      var resto = texto.slice(frase.length);
+      var partes = FRASES[frase].split(' ').map(_trCapFirst);
+      return partes.join(' ') + traducirLocal(resto, idioma);
+    }
+  }
+
+  var tokens = texto.match(/[A-Za-zÁÉÍÓÚÑáéíóúñ]+|[^A-Za-zÁÉÍÓÚÑáéíóúñ]+/g) || [];
+  var out = tokens.map(function(tok){
+    if(!/^[A-Za-zÁÉÍÓÚÑáéíóúñ]+$/.test(tok)) return tok;
+    var low = tok.toLowerCase();
+    var esSigla = tok===tok.toUpperCase() && tok.length>1;
+    if(esSigla) return tok;
+    var tr;
+    if(FUNC.hasOwnProperty(low)) tr = FUNC[low];
+    else if(WORDS.hasOwnProperty(low)) tr = WORDS[low];
+    else tr = tok;
+    if(tok.charAt(0)===tok.charAt(0).toUpperCase() && tr){
+      var p = tr.split(' ');
+      p[0] = _trCapFirst(p[0]);
+      tr = p.join(' ');
+    }
+    return tr;
+  });
+  var resultado = out.join('');
+  if(idioma==='pt') resultado = _trContraerPT(resultado);
+  return resultado;
+}
+
+// ============================================================
+// TRADUCCIÓN COMPARTIDA VÍA API (usada por Excel LM y PDF LM)
+// ============================================================
+// Traduce una lista de textos únicos del español al idioma indicado ('en'|'pt').
+// Devuelve un mapa {textoOriginal: textoTraducido}. Usado por el módulo de
+// Reportes tanto para el Excel (generarExcelLM) como para el PDF
+// (generarListadoPDF), de modo que TODO el contenido del documento
+// (descripción, tipo de documento, proceso, etc.) quede en el idioma elegido.
+async function traducirTextosAPI(textList, lang, progressLabel){
+  var pt=lang==='pt';
+  var en=lang==='en';
+  // MyMemory: servicio de traducción gratuito, SIN necesidad de API key y con
+  // CORS habilitado para llamarse directamente desde el navegador. Se usa en
+  // lugar de la API de Anthropic porque esta última requiere una credencial
+  // que solo está disponible dentro de la vista previa de Claude.ai — al
+  // abrir este archivo como app real (doble clic, red, etc.) esa llamada
+  // no tiene forma de autenticarse y siempre fallaba en silencio, dejando
+  // todo el listado en español aunque se eligiera Inglés/Portugués.
+  var targetLang=pt?'pt':'en';
+  var tMap={};
+  if(!textList||!textList.length) return tMap;
+
+  // Limpiar (quitar saltos de línea/artefactos de Excel) y deduplicar —
+  // dos descripciones distintas pueden quedar iguales tras la limpieza.
+  var clean=textList.map(function(t){return limpiarTextoExcel(String(t||''));})
+                     .filter(function(t){return t.length>1;});
+  var unicos=[], visto={};
+  clean.forEach(function(t){ if(!visto[t]){visto[t]=true; unicos.push(t);} });
+
+  var total=unicos.length, done=0;
+  var CONCURRENCIA=6; // peticiones simultáneas — balance entre velocidad y no saturar el servicio
+  var idx=0;
+
+  function traducirUno(texto){
+    // Límite práctico de la API gratuita: ~500 caracteres por consulta
+    var q=texto.length>480?texto.slice(0,480):texto;
+    var url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(q)+'&langpair=es|'+targetLang+'&mt=1';
+    return fetch(url).then(function(r){ return r.ok?r.json():null; }).then(function(data){
+      // responseStatus debe ser 200 (numérico o string) para considerar la
+      // traducción válida; de lo contrario data.responseData.translatedText
+      // suele traer el propio mensaje de error (ej. "INVALID LANGUAGE PAIR...").
+      var okStatus = data && (data.responseStatus===200 || data.responseStatus==='200');
+      var t = okStatus && data.responseData && data.responseData.translatedText;
+      if(t && !/MYMEMORY WARNING|QUERY LENGTH LIMIT|INVALID LANGUAGE|NO QUERY SPECIFIED/i.test(t)){
+        tMap[texto]=t;
+      } else if(!okStatus){
+        console.warn('[TR] MyMemory respondió con error para:',texto,data&&data.responseDetails);
+      }
+    }).catch(function(e){
+      console.warn('[TR] fallo traduciendo texto:',texto,e);
+    });
+  }
+
+  async function worker(){
+    while(idx<unicos.length){
+      var mi=idx++;
+      await traducirUno(unicos[mi]);
+      done++;
+      if(done%8===0||done===total){
+        toast((progressLabel||(pt?'Traduzindo ':en?'Translating ':'Traduciendo '))+done+'/'+total+'...','if');
+      }
+    }
+  }
+
+  try{
+    var nWorkers=Math.min(CONCURRENCIA,unicos.length);
+    var workers=[];
+    for(var w=0;w<nWorkers;w++) workers.push(worker());
+    await Promise.all(workers);
+  }catch(e){
+    console.error('[TR] error general:',e);
+    toast((pt?'Erro na tradução, gerando com texto original':en?'Translation error, generating with original text':'Error en traducción'),'wa');
+  }
+
+  console.log('[TR] '+Object.keys(tMap).length+'/'+total+' textos traducidos');
+  return tMap;
+}
+
+async function _generarExcelConTraduccion(data, selectedCols, selectedEstados, lang){
+  var pt=lang==='pt';
+  var en=lang==='en';
+
+  toast((pt?'Traduzindo e gerando Excel...':'Translating and generating Excel...'),'if');
+
+  // ── Recopilar todos los textos únicos que necesitan traducción ──
+  // Solo campos de texto libre (no fechas, versiones, códigos, ni valores booleanos)
+  var TEXTO_LIBRE=['descripcion','tipoDocumento','areaGeneradora','proceso',
+    'administrador','liderProceso','alcanceEmpresas','areasAplicables',
+    'docsRelacionados','tipoPlantilla'];
+
+  // Recopilar textos únicos para traducción vía API
+  var uniqueTexts={};
+  data.forEach(function(d){
+    // Texto libre
+    TEXTO_LIBRE.forEach(function(k){
+      var v=String(d[k]||'').trim();
+      if(v&&v.length>1) uniqueTexts[v]=true;
+    });
+    // Estado (aunque tiene diccionario fijo, incluir por si hay variaciones)
+    var est=String(d.estado||'').trim();
+    if(est) uniqueTexts[est]=true;
+    // Obsoleto y idioma se traducen con diccionario fijo (no necesitan API)
+    // Descripción: solo si NO existe el campo nativo del idioma elegido
+    if(pt&&!d.descriptionPt&&d.descripcion) uniqueTexts[d.descripcion]=true;
+    if(en&&!d.descriptionEn&&d.descripcion) uniqueTexts[d.descripcion]=true;
+  });
+
+  var textList=Object.keys(uniqueTexts).filter(function(t){return t.length>1;});
+  var tMap=await traducirTextosAPI(textList, lang, pt?'Traduzindo lote ':en?'Translating batch ':'Traduciendo lote ');
+  console.log('[XLS-TR] tMap total:',Object.keys(tMap).length,'entradas');
+
+  _generarExcelConDatos(data, selectedCols, selectedEstados, lang, tMap);
+}
+
+function _generarExcelConDatos(data, selectedCols, selectedEstados, lang, tMap){
+  var es=lang==='es';
+  var pt=lang==='pt';
+  var en=lang==='en';
+  tMap=tMap||{};
 
   var estEN={'Vigente':'Active','Menos de 15 días':'< 15 days','Menos de 1 Mes':'< 1 Month',
     'Menos de 2 Meses':'< 2 Months','Menos de 3 Meses':'< 3 Months',
     'Menos de 4 Meses':'< 4 Months','Menos de 5 Meses':'< 5 Months',
     'Vencido':'Expired','Obsoleto':'Obsolete'};
+  var estPT={'Vigente':'Vigente','Menos de 15 días':'< 15 dias','Menos de 1 Mes':'< 1 Mês',
+    'Menos de 2 Meses':'< 2 Meses','Menos de 3 Meses':'< 3 Meses',
+    'Menos de 4 Meses':'< 4 Meses','Menos de 5 Meses':'< 5 Meses',
+    'Vencido':'Vencido','Obsoleto':'Obsoleto'};
+
+  // Función auxiliar: traducir un texto via tMap o diccionarios fijos.
+  // Se prueba también con espacios recortados por si la recolección y la
+  // búsqueda no coincidieron exactamente en algún caso límite.
+  function tr(v){
+    if(!v||es) return v;
+    var vc=limpiarTextoExcel(String(v));
+    return tMap[v]||tMap[vc]||v;
+  }
+
   function tradVal(col,d){
     var v=String(d[col.key]||'');
-    if(!es&&col.useEn&&d[col.useEn]) return String(d[col.useEn]);
-    if(!es&&col.key==='estado') return estEN[v]||v;
-    return v;
+    if(es) return v;
+
+    // Descripción: usar campo nativo del idioma elegido; si no existe,
+    // traducir el español vía API. NUNCA mostrar la descripción de otro
+    // idioma distinto al seleccionado (p.ej. no mostrar EN cuando se pidió PT).
+    if(col.key==='descripcion'){
+      if(pt) return d.descriptionPt || tr(v);
+      return d.descriptionEn || tr(v);
+    }
+    if(col.key==='descriptionPt') return d.descriptionPt||tr(d.descripcion||'');
+    if(col.key==='descriptionEn') return d.descriptionEn||tr(d.descripcion||'');
+
+    // Estado: diccionario fijo; si no coincide, usar tMap (traducciones de la API)
+    if(col.key==='estado'){
+      var estDict=pt?estPT:estEN;
+      return estDict[v]||tMap[v]||v;
+    }
+
+    // Obsoleto: traducir Sí/Si/X → Sim/Yes, No/vacío → Não/No
+    var boolMap=pt?{truthy:'Sim',falsy:'Não'}:{truthy:'Yes',falsy:'No'};
+    if(col.key==='obsoleto'){
+      if(v==='X'||v==='Si'||v==='Sí'||v==='si'||v==='1') return boolMap.truthy;
+      if(v===''||v==='No'||v==='no'||v==='0')             return boolMap.falsy;
+      return v;
+    }
+    if(col.key==='docGxP'||col.key==='mbr'||col.key==='docIntercompania'){
+      if(v==='X'||v==='Si'||v==='Sí'||v==='si'||v==='1') return boolMap.truthy;
+      if(v===''||v==='No'||v==='no'||v==='0')             return boolMap.falsy;
+      return v;
+    }
+
+    // Idioma
+    if(col.key==='idioma'){
+      if(pt){
+        if(v==='E'||v==='S') return 'Espanhol';
+        if(v==='I')          return 'Inglês';
+        if(v==='P')          return 'Português';
+      } else {
+        if(v==='E'||v==='S') return 'Spanish';
+        if(v==='I')          return 'English';
+        if(v==='P')          return 'Portuguese';
+      }
+      return v;
+    }
+
+    // Texto libre: usar traducción de la API
+    return tr(v);
   }
 
   var today=new Date();
   var fechaHoy=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   var NC=selectedCols.length;
 
-  //  Estilos 
+  // Estilos
   var S_TITLE={font:{name:'Calibri',sz:13,bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'006860'},patternType:'solid'},alignment:{horizontal:'center',vertical:'center',wrapText:true}};
   var S_SUB  ={font:{name:'Calibri',sz:10,color:{rgb:'D0F0EC'}},          fill:{fgColor:{rgb:'009B8D'},patternType:'solid'},alignment:{horizontal:'center',vertical:'center'}};
   var S_MLBL ={font:{name:'Calibri',sz:8,bold:true,color:{rgb:'006860'}}, fill:{fgColor:{rgb:'F5F9F9'},patternType:'solid'},alignment:{horizontal:'left',vertical:'center'}};
@@ -22599,75 +23442,85 @@ function generarExcelLM(){
   var S_HDR  ={font:{name:'Calibri',sz:9,bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'009B8D'},patternType:'solid'},alignment:{horizontal:'center',vertical:'center',wrapText:true},
                border:{top:{style:'thin',color:{rgb:'FFFFFF'}},bottom:{style:'thin',color:{rgb:'FFFFFF'}},left:{style:'thin',color:{rgb:'FFFFFF'}},right:{style:'thin',color:{rgb:'FFFFFF'}}}};
   var bd={top:{style:'thin',color:{rgb:'C8DEDE'}},bottom:{style:'thin',color:{rgb:'C8DEDE'}},left:{style:'thin',color:{rgb:'C8DEDE'}},right:{style:'thin',color:{rgb:'C8DEDE'}}};
-  var S_CELL_W={font:{name:'Calibri',sz:9,color:{rgb:'0A2828'}},fill:{fgColor:{rgb:'FFFFFF'},patternType:'solid'},border:bd,alignment:{horizontal:'left',vertical:'center'}};
-  var S_CELL_A={font:{name:'Calibri',sz:9,color:{rgb:'0A2828'}},fill:{fgColor:{rgb:'F0F4F3'},patternType:'solid'},border:bd,alignment:{horizontal:'left',vertical:'center'}};
-  var S_OBS  ={font:{name:'Calibri',sz:9,bold:true,color:{rgb:'A02020'}}, fill:{fgColor:{rgb:'FDE8E8'},patternType:'solid'},border:bd,alignment:{horizontal:'left',vertical:'center'}};
-  var S_VENC ={font:{name:'Calibri',sz:9,bold:true,color:{rgb:'856404'}}, fill:{fgColor:{rgb:'FFF3CD'},patternType:'solid'},border:bd,alignment:{horizontal:'left',vertical:'center'}};
+  var S_CELL_W={font:{name:'Calibri',sz:9,color:{rgb:'0A2828'}},fill:{fgColor:{rgb:'FFFFFF'},patternType:'solid'},border:bd,alignment:{horizontal:'left',vertical:'center',wrapText:true}};
+  var S_CELL_A={font:{name:'Calibri',sz:9,color:{rgb:'0A2828'}},fill:{fgColor:{rgb:'F0F4F3'},patternType:'solid'},border:bd,alignment:{horizontal:'left',vertical:'center',wrapText:true}};
+  var S_VENC ={font:{name:'Calibri',sz:9,bold:true,color:{rgb:'856404'}},fill:{fgColor:{rgb:'FFF3CD'},patternType:'solid'},border:bd,alignment:{horizontal:'left',vertical:'center'}};
+  var S_EXP  ={font:{name:'Calibri',sz:9,bold:true,color:{rgb:'A02020'}},fill:{fgColor:{rgb:'FDE8E8'},patternType:'solid'},border:bd,alignment:{horizontal:'left',vertical:'center'}};
 
-  function rowStyle(d,alt){
-    var esObs=d.estado==='Obsoleto'||d.obsoleto==='X'||d.obsoleto==='Si'||d.obsoleto==='Sí';
-    if(esObs) return S_OBS;
-    if(d.estado==='Vencido') return S_VENC;
-    return alt?S_CELL_A:S_CELL_W;
-  }
+  // Textos según idioma
+  var T={
+    titulo:     es?'ADMINISTRACIÓN DEL SISTEMA DE DOCUMENTACIÓN':
+                pt?tr('ADMINISTRACIÓN DEL SISTEMA DE DOCUMENTACIÓN')||'ADMINISTRAÇÃO DO SISTEMA DE DOCUMENTAÇÃO':
+                   'DOCUMENTATION SYSTEM MANAGEMENT',
+    subtitulo:  es?'Listado Maestro de Documentos':
+                pt?tr('Listado Maestro de Documentos')||'Lista Mestra de Documentos':
+                   'Master Document List',
+    codLbl:     es?'Código:':pt?'Código:':'Code:',
+    verLbl:     es?'Versión:':pt?'Versão:':'Version:',
+    fechaLbl:   es?'Fecha:':pt?'Data:':'Date:',
+    docsLbl:    es?'Documentos:':pt?'Documentos:':'Documents:'
+  };
 
-  //  AOA 
   var aoa=[];
-
-  // Fila 0: Título
-  var r0=[{v:es?'ADMINISTRACIÓN DEL SISTEMA DE DOCUMENTACIÓN':'DOCUMENTATION SYSTEM MANAGEMENT',t:'s',s:S_TITLE}];
+  // Título
+  var r0=[{v:T.titulo,t:'s',s:S_TITLE}];
   for(var ci=1;ci<NC;ci++) r0.push({v:'',t:'s',s:S_TITLE});
   aoa.push(r0);
 
-  // Fila 1: Subtítulo
-  var r1=[{v:(es?'Listado Maestro de Documentos':'Master Document List')+' — LM-0019',t:'s',s:S_SUB}];
+  // Subtítulo
+  var r1=[{v:T.subtitulo+' — LM-0019',t:'s',s:S_SUB}];
   for(var ci=1;ci<NC;ci++) r1.push({v:'',t:'s',s:S_SUB});
   aoa.push(r1);
 
-  // Fila 2: Metadata
+  // Metadata
   var r2=[]; for(var ci=0;ci<NC;ci++) r2.push({v:'',t:'s',s:S_MVAL});
-  var mPairs=[[es?'Código:':'Code:','LM-0019'],[es?'Versión:':'Version:','00'],[es?'Fecha:':'Date:',fechaHoy],[es?'Documentos:':'Documents:',String(data.length)]];
+  var mPairs=[[T.codLbl,'LM-0019'],[T.verLbl,'00'],[T.fechaLbl,fechaHoy],[T.docsLbl,String(data.length)]];
   var mStep=Math.max(1,Math.floor(NC/mPairs.length));
   mPairs.forEach(function(p,mi){var c0=mi*mStep;if(c0<NC)r2[c0]={v:p[0],t:'s',s:S_MLBL};if(c0+1<NC)r2[c0+1]={v:p[1],t:'s',s:S_MVAL};});
   aoa.push(r2);
 
-  // Fila 3: Encabezados
-  aoa.push(selectedCols.map(function(c){return{v:es?c.es:c.en,t:'s',s:S_HDR};}));
+  // Encabezados
+  aoa.push(selectedCols.map(function(c){
+    return {v:es?c.es:pt?(c.pt||c.es):c.en,t:'s',s:S_HDR};
+  }));
 
-  // Filas datos — ordenadas por estado (vigentes primero, luego próximos, vencidos, obsoletos)
-  var estadoOrder={'Vigente':0,'Menos de 5 Meses':1,'Menos de 4 Meses':2,'Menos de 3 Meses':3,'Menos de 2 Meses':4,'Menos de 1 Mes':5,'Menos de 15 días':6,'Vencido':7,'Obsoleto':8};
-  data.sort(function(a,b){
-    var oa=estadoOrder[a.estado]||9, ob=estadoOrder[b.estado]||9;
-    if(oa!==ob) return oa-ob;
-    return (a.codigoActual||'').localeCompare(b.codigoActual||'');
-  });
+  // Filas de datos
+  // SheetJS limita a 32767 caracteres por celda — truncar si excede
+  function xlsSafe(v){
+    var s=String(v==null?'':v);
+    return s.length>32767?s.slice(0,32764)+'...':s;
+  }
   data.forEach(function(d,ri){
-    var S=rowStyle(d,ri%2===1);
-    aoa.push(selectedCols.map(function(col){return{v:tradVal(col,d),t:'s',s:S};}));
+    var alt=ri%2===1;
+    var isVenc=d.estado==='Vencido';
+    var isExp=d.estado==='Obsoleto';
+    var baseS=isVenc?S_VENC:isExp?S_EXP:alt?S_CELL_A:S_CELL_W;
+    var row=selectedCols.map(function(c){
+      return {v:xlsSafe(tradVal(c,d)),t:'s',s:baseS};
+    });
+    aoa.push(row);
   });
 
-  //  Workbook 
   var wb=XLSX.utils.book_new();
   var ws=XLSX.utils.aoa_to_sheet(aoa);
   ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:NC-1}},{s:{r:1,c:0},e:{r:1,c:NC-1}}];
-  ws['!cols']=selectedCols.map(function(c){return{wch:c.w};});
+  ws['!cols']=selectedCols.map(function(c){return{wch:c.w||20};});
   ws['!rows']=[{hpt:34},{hpt:22},{hpt:18},{hpt:28}].concat(data.map(function(){return{hpt:16};}));
   ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:3,c:0},e:{r:3,c:NC-1}})};
-  XLSX.utils.book_append_sheet(wb,ws,es?'Listado Maestro':'Master List');
+  XLSX.utils.book_append_sheet(wb,ws,es?'Listado Maestro':pt?'Lista Mestra':'Master List');
 
-  var fname='LM-0019_'+(es?'Listado_Maestro':'Master_Document_List')+'_'+fechaHoy+'.xlsx';
+  var fname='LM-0019_'+(es?'Listado_Maestro':pt?'Lista_Mestra':'Master_Document_List')+'_'+fechaHoy+'.xlsx';
   try{
     XLSX.writeFile(wb,fname,{cellStyles:true});
-    toast('✅ Excel: '+fname+' — '+data.length+' documentos','ok');
-    if(typeof logA==='function') logA('Usuario','Descarga','Excel LM ('+lang+'): '+data.length+' docs, estados: '+selectedEstados.join(','));
+    toast('\u2705 '+(es?'Excel generado':pt?'Excel gerado':'Excel generated')+': '+fname,'ok');
+    if(typeof logA==='function') logA('Usuario','Descarga','Excel LM ('+lang+'): '+data.length+' docs');
   }catch(e){
-    toast('Error: '+e.message,'er'); console.error(e);
+    toast((es?'Error al generar':'Error generating')+': '+e.message,'er');
+    console.error(e);
   }
 }
 
-//  FINALIZAR UNA SUBÁREA: informe + guardar en acumulado 
 
-//  LIMPIAR ACUMULADO GLOBAL 
 function ecc_limpiarAcumulado(){
   if(!eccAcumulado.length&&!eccSesionCodigos.length){
     toast('No hay inspección activa que limpiar','ok'); return;
@@ -23223,13 +24076,36 @@ function nfInit(){
   // Listener tipo novedad -> mostrar bloque creacion
   var elTipo=document.getElementById('nf-tipo');
   if(elTipo) elTipo.addEventListener('change',function(){
-    var isCreacion=this.value==='Creación';
+    var _tipo=this.value;
+    var isCreacion=_tipo==='Creación';
+    var isElim=_tipo==='Eliminación';
     var extra=document.getElementById('nf-creacion-extra');
     if(extra) extra.style.display=isCreacion?'block':'none';
     if(isCreacion){
       nfPoblarTiposDocNuevo();
       var verEl=document.getElementById('nf-version');
-      if(verEl) verEl.value='01';
+      if(verEl && !verEl._manual) verEl.value='00'; // Creación siempre versión 0
+    } else {
+      // Re-calcular la versión según el tipo ahora seleccionado,
+      // leyendo el documento del LM si el código ya fue ingresado
+      var _codEl2=document.getElementById('nf-cod');
+      var _codVal2=_codEl2?(_codEl2.value||'').trim().toUpperCase():'';
+      if(_codVal2.length>=3){
+        var _docRe=(docs||[]).find(function(d){
+          return (d.codigoActual||'').toUpperCase()===_codVal2;
+        });
+        if(_docRe){
+          var verElR=document.getElementById('nf-version');
+          if(verElR&&!verElR._manual){
+            var _vb=parseInt(_docRe.version)||0;
+            if(isElim){
+              verElR.value=String(_vb).padStart(2,'0'); // misma versión LM
+            } else {
+              verElR.value=String(_vb+1).padStart(2,'0'); // Modificación: +1
+            }
+          }
+        }
+      }
     }
   });
   // Construir filas de matriz si no existen
@@ -23443,7 +24319,7 @@ function nfEvaluarCodigoNuevo(){
   if(codAsig) codAsig.value=nuevoCod;
   if(codEl){ codEl.value=nuevoCod; codEl.style.color='var(--T)'; codEl.style.fontWeight='700'; }
   if(tipodocEl) tipodocEl.value=tipo;
-  if(verEl) verEl.value='0'; // Creación siempre versión 0
+  if(verEl && !verEl._manual) verEl.value='00'; // Creación siempre versión 00
 
   var msgDesc=descartados.length?' — Descartados: '+descartados.join(', '):'';
   showMsg('✅ Código asignado: '+nuevoCod+' (base: '+prefijoBase+'-'+String(maxGlobal).padStart(4,'0')+(esCorp?'-COR':'')+')'+msgDesc,'#e8f5e9','#1b5e20');
@@ -23726,8 +24602,20 @@ function nfBuscarDoc(cod){
       else { areaInfoEl.textContent='📍 Área: (no registrada en LM)'; areaInfoEl.style.display='block'; }
     } else { console.warn('nf-area-info div NO encontrado en el DOM'); }
     if(verEl && !verEl._manual){
-      var v = (parseInt(doc.version)||0) + 1;
-      verEl.value = String(v).padStart(2,'0');
+      var _tipoNovVer=(document.getElementById('nf-tipo')||{}).value||'';
+      var _verBase=parseInt(doc.version)||0;
+      var _verCalc;
+      if(_tipoNovVer==='Eliminación'){
+        // Eliminación: misma versión que está en el Listado Maestro
+        _verCalc=_verBase;
+      } else if(_tipoNovVer==='Creación'){
+        // Creación: versión 0 (el documento aún no existe)
+        _verCalc=0;
+      } else {
+        // Modificación (u otro): versión actual + 1
+        _verCalc=_verBase+1;
+      }
+      verEl.value=String(_verCalc).padStart(2,'0');
     }
     var obsStr = String(doc.obsoleto||'').toUpperCase().trim();
     var estStr = String(doc.estado||'').toUpperCase().trim();
@@ -25002,6 +25890,304 @@ function nfLimpiar(){
   toast('Formulario limpiado','ok');
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// CARGAR EXCEL OFICIAL DEL FORMATO F-SOP-0001-5 (con celdas combinadas)
+// ══════════════════════════════════════════════════════════════════════════
+// A diferencia de nfCargarPlantilla() (que espera una hoja simplificada
+// "Plantilla_Novedad" col A/B/C), esta función lee el Excel TAL CUAL se
+// genera/diligencia el formato oficial (hoja con el mismo layout visual,
+// celdas combinadas, etc.) y ubica cada dato buscando su etiqueta en la
+// cuadrícula — no depende de posiciones fijas de fila/columna, así que
+// tolera pequeñas variaciones de diseño entre versiones del formato.
+async function nfCargarExcelOficial(){
+  if(!window.showOpenFilePicker){
+    toast('Requiere Chrome o Edge actualizado','er'); return;
+  }
+  var handles;
+  try{
+    handles=await window.showOpenFilePicker({
+      types:[{description:'Formato Novedad de Documento (Excel)',accept:{
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx'],
+        'application/vnd.ms-excel.sheet.macroEnabled.12':['.xlsm']
+      }}],
+      multiple:false
+    });
+  }catch(e){ if(e.name!=='AbortError') toast('Error al seleccionar archivo','er'); return; }
+
+  try{
+    var file=await handles[0].getFile();
+    var buf=await file.arrayBuffer();
+    var wb=XLSX.read(buf,{type:'array',cellDates:false,raw:false});
+    // Lectura paralela con fechas reales (objetos Date) para poder formatear
+    // la fecha de solicitud como AAAA-MM-DD sin importar el formato regional
+    // con el que Excel la muestre (7/3/26, 03-jul-2026, etc.)
+    var wbD=XLSX.read(buf,{type:'array',cellDates:true});
+
+    // Buscar la hoja del formato oficial
+    var wsName=null;
+    wb.SheetNames.forEach(function(n){
+      if(wsName) return;
+      var nu=n.toUpperCase();
+      if(nu.indexOf('F-SOP-0001')>=0 || nu.indexOf('NOVEDAD')>=0) wsName=n;
+    });
+    if(!wsName) wsName=wb.SheetNames[0];
+    var ws=wb.Sheets[wsName];
+    var wsD=wbD.Sheets[wsName];
+    var grid=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+    var gridD=XLSX.utils.sheet_to_json(wsD,{header:1,defval:'',raw:false});
+
+    // ── Utilidades de búsqueda en la cuadrícula ──────────────────────────
+    function norm(s){ return String(s==null?'':s).replace(/\s+/g,' ').trim().toUpperCase(); }
+    function buscarCelda(texto, desdeFila){
+      texto=norm(texto);
+      for(var r=(desdeFila||0); r<grid.length; r++){
+        var fila=grid[r]||[];
+        for(var c=0; c<fila.length; c++){
+          if(norm(fila[c]).indexOf(texto)>=0) return {r:r,c:c};
+        }
+      }
+      return null;
+    }
+    function valorDerecha(r,cDesde){
+      var fila=grid[r]||[];
+      for(var c=cDesde+1; c<fila.length; c++){
+        var v=fila[c];
+        if(v!=null && String(v).trim()!=='') return String(v).trim();
+      }
+      return '';
+    }
+    function valorEtiqueta(texto, desdeFila){
+      var pos=buscarCelda(texto, desdeFila);
+      if(!pos) return '';
+      return valorDerecha(pos.r,pos.c);
+    }
+    // Formatea a AAAA-MM-DD. Busca la etiqueta en la misma posición dentro
+    // de la lectura "con fechas reales" para obtener un objeto Date exacto
+    // (evita depender del texto formateado, que varía según el regional de Excel).
+    function fechaISO(texto){
+      var pos=buscarCelda(texto);
+      if(!pos) return '';
+      var fila=grid[pos.r]||[];
+      var filaD=gridD[pos.r]||[];
+      for(var c=pos.c+1; c<fila.length; c++){
+        var v=fila[c];
+        if(v!=null && String(v).trim()!==''){
+          var vD=filaD[c];
+          var d=(vD instanceof Date)?vD:new Date(v);
+          if(!isNaN(d)){
+            var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+            return y+'-'+m+'-'+dd;
+          }
+          return String(v).trim(); // no se pudo parsear como fecha: dejar el texto original
+        }
+      }
+      return '';
+    }
+    // Campos SI/NO marcados con una "X" junto a la opción elegida
+    function valorSiNo(texto){
+      var pos=buscarCelda(texto);
+      if(!pos) return '';
+      var fila=grid[pos.r]||[];
+      var colSi=-1, colNo=-1;
+      for(var c=pos.c+1; c<fila.length; c++){
+        var v=norm(fila[c]);
+        if((v==='SI'||v==='SÍ') && colSi<0) colSi=c;
+        else if(v==='NO' && colNo<0) colNo=c;
+      }
+      function marcado(col){
+        if(col<0) return false;
+        for(var c2=col+1;c2<fila.length;c2++){
+          var v2=norm(fila[c2]);
+          if(v2==='X') return true;
+          if(v2==='SI'||v2==='SÍ'||v2==='NO'||v2!=='') return false;
+        }
+        return false;
+      }
+      if(colSi>=0 && marcado(colSi)) return 'Si';
+      if(colNo>=0 && marcado(colNo)) return 'No';
+      return '';
+    }
+
+    // ── 1. Datos del solicitante ──────────────────────────────────────
+    var nombre  = valorEtiqueta('NOMBRES Y APELLIDOS');
+    var cargo   = valorEtiqueta('NOMBRE DEL CARGO');
+    var area    = valorEtiqueta('A LA QUE PERT'); // robusto a "pertenece"/"pertence" (typo frecuente en la plantilla)
+    var fechaSol= fechaISO('FECHA DE LA SOLICITUD');
+
+    // ── 2. Información de la novedad ────────────────────────────────
+    var tipoNov   = valorEtiqueta('TIPO DE NOVEDAD');
+    var codCompleto = valorEtiqueta('CÓDIGO DEL DOCUMENTO') || valorEtiqueta('CODIGO DEL DOCUMENTO');
+    var nombreDoc = valorEtiqueta('NOMBRE DEL DOCUMENTO');
+    var origen    = valorEtiqueta('ORIGEN DE LA NOVEDAD');
+    var esGxp     = valorSiNo('ES GXP');
+    var reqCopia  = valorSiNo('COPIA CONTROLADA');
+    var cantCopias= valorEtiqueta('CANTIDAD DE COPIAS');
+
+    // ── 3. Descripción de la novedad ──────────────────────────────────
+    var descPos = buscarCelda('DESCRIPCIÓN DE LA NOVEDAD') || buscarCelda('DESCRIPCION DE LA NOVEDAD');
+    var descripcion='';
+    if(descPos){
+      for(var rr=descPos.r+1; rr<Math.min(descPos.r+6,grid.length) && !descripcion; rr++){
+        var filaD=grid[rr]||[];
+        for(var cc=0; cc<filaD.length; cc++){
+          var vv=filaD[cc];
+          if(vv!=null && String(vv).trim()!==''){ descripcion=String(vv).trim(); break; }
+        }
+      }
+    }
+
+    // ── 4. Matriz de autorización — localizar encabezado NOMBRE/CARGO/ROL ─
+    var mtxHeader=null;
+    for(var rH=0; rH<grid.length && !mtxHeader; rH++){
+      var filaH=grid[rH]||[];
+      var iN=-1,iC=-1,iR=-1;
+      for(var cH=0; cH<filaH.length; cH++){
+        var tH=norm(filaH[cH]);
+        if(tH==='NOMBRE') iN=cH;
+        else if(tH==='CARGO') iC=cH;
+        else if(tH==='ROL') iR=cH;
+      }
+      if(iN>=0&&iC>=0&&iR>=0) mtxHeader={r:rH,cNom:iN,cCar:iC,cRol:iR};
+    }
+    var matriz=[];
+    if(mtxHeader){
+      var blancos=0;
+      for(var rM=mtxHeader.r+1; rM<grid.length && blancos<2; rM++){
+        var filaM=grid[rM]||[];
+        var nom=(filaM[mtxHeader.cNom]!=null?String(filaM[mtxHeader.cNom]):'').trim();
+        if(!nom){ blancos++; continue; }
+        blancos=0;
+        matriz.push({
+          nombre:nom,
+          cargo:(filaM[mtxHeader.cCar]!=null)?String(filaM[mtxHeader.cCar]).trim():'',
+          rol:(filaM[mtxHeader.cRol]!=null)?String(filaM[mtxHeader.cRol]).trim():''
+        });
+      }
+    }
+
+    // ── 5. Cargos a entrenar / divulgar ────────────────────────────────
+    var entPos = buscarCelda('CARGO DEL COLABORADOR A ENTRENAR') || buscarCelda('A ENTRENAR O DIVULGAR');
+    var cargosEntrenar=[];
+    if(entPos){
+      var blancos2=0;
+      for(var rE=entPos.r+1; rE<grid.length && blancos2<3; rE++){
+        var filaE=grid[rE]||[];
+        var val=(filaE[entPos.c]!=null?String(filaE[entPos.c]):'').trim();
+        if(!val){ blancos2++; continue; }
+        blancos2=0;
+        if(/^\d+\.\s/.test(val)) break; // topó con el título de otra sección
+        cargosEntrenar.push(val);
+      }
+    }
+
+    // ── 6. Análisis de criticidad ───────────────────────────────────────
+    var calPos = buscarCelda('CALIFICACIÓN') || buscarCelda('CALIFICACION');
+    var cCal = calPos?calPos.c:-1;
+    function calificacionDe(aspecto){
+      if(cCal<0) return '';
+      var pos=buscarCelda(aspecto, calPos.r);
+      if(!pos) return '';
+      var v=(grid[pos.r]||[])[cCal];
+      return v!=null?String(v).trim():'';
+    }
+    var nc1v=calificacionDe('CALIDAD'),
+        nc2v=calificacionDe('SEGURIDAD DE LAS PERSONAS'),
+        nc3v=calificacionDe('SEGURIDAD DEL PACIENTE'),
+        nc4v=calificacionDe('DESEMPEÑO DEL PROCESO'),
+        nd1v=calificacionDe('DETECCIÓN DE FALLA') || calificacionDe('DETECCION DE FALLA');
+
+    // ═════════════════════════════════════════════════════════════════
+    // Volcar todo al formulario de la app
+    // ═════════════════════════════════════════════════════════════════
+    function setVal(id,v){ var el=document.getElementById(id); if(el&&v) el.value=v; }
+
+    setVal('nf-nombre', nombre);
+    setVal('nf-cargo', cargo);
+    setVal('nf-area', area);
+    setVal('nf-origen', origen);
+    if(fechaSol) setVal('nf-fecha', fechaSol);
+
+    var codLimpio='';
+    if(codCompleto){
+      codLimpio = codCompleto.split(' ')[0].trim().toUpperCase();
+      var codEl=document.getElementById('nf-cod');
+      if(codEl){ codEl.value=codLimpio; nfBuscarDoc(codLimpio); }
+    }
+    if(nombreDoc){
+      var nomDocEl=document.getElementById('nf-nombredoc');
+      if(nomDocEl){ nomDocEl.value=nombreDoc; nomDocEl._manual=true; }
+    }
+    if(descripcion) setVal('nf-descripcion', descripcion);
+
+    // Tipo de novedad — dispara el listener 'change' (bloque Creación, etc.)
+    if(tipoNov){
+      var tipoEl=document.getElementById('nf-tipo');
+      if(tipoEl){
+        var opt=Array.from(tipoEl.options).find(function(o){return norm(o.text)===norm(tipoNov);});
+        if(opt){ tipoEl.value=opt.value; tipoEl.dispatchEvent(new Event('change')); }
+      }
+    }
+
+    // Versión: extraer de "INST-1320 V00" si viene incluida junto al código
+    if(codCompleto){
+      var mVer=codCompleto.match(/V\s*(\d+)/i);
+      if(mVer){
+        var verEl=document.getElementById('nf-version');
+        if(verEl){ verEl.value=mVer[1].padStart(2,'0'); verEl._manual=true; }
+      }
+    }
+
+    // GXP / Copia controlada (indicadores de solo lectura)
+    if(esGxp){ var g=document.getElementById('nf-gxp-disp'); if(g) g.textContent=esGxp; }
+    if(reqCopia){
+      var cdisp=document.getElementById('nf-copia-disp'); if(cdisp) cdisp.textContent=reqCopia;
+      var cw=document.getElementById('nf-cant-wrap');
+      if(reqCopia==='Si'){ if(cw) cw.style.visibility='visible'; if(cantCopias) setVal('nf-cant-copias',cantCopias); }
+    }
+
+    // Matriz de autorización
+    if(matriz.length){
+      var mtxBody=document.getElementById('nf-mtx-body');
+      if(mtxBody){
+        mtxBody.innerHTML='';
+        matriz.forEach(function(){ nfMtxAgregarFila(); });
+        matriz.forEach(function(m,i){
+          var n=document.getElementById('nfm-nom-'+i); if(n) n.value=m.nombre;
+          var c=document.getElementById('nfm-car-'+i); if(c) c.value=m.cargo;
+          var r=document.getElementById('nfm-rol-'+i);
+          if(r){
+            var rolNorm=norm(m.rol);
+            Array.from(r.options).forEach(function(o){ if(norm(o.value)===rolNorm) r.value=o.value; });
+          }
+        });
+      }
+    }
+
+    // Cargos a entrenar / divulgar
+    if(cargosEntrenar.length){
+      var entBody=document.getElementById('nf-entrenar-body');
+      if(entBody){
+        entBody.innerHTML='';
+        cargosEntrenar.forEach(function(c){
+          nfEntrenarAgregarFila();
+          var campos=entBody.querySelectorAll('.nf-ent-cargo');
+          var last=campos[campos.length-1];
+          if(last) last.value=c;
+        });
+      }
+    }
+
+    // Análisis de criticidad
+    setVal('nc1',nc1v); setVal('nc2',nc2v); setVal('nc3',nc3v); setVal('nc4',nc4v); setVal('nd1',nd1v);
+    if(typeof nfCalcCrit==='function') nfCalcCrit();
+
+    toast('✅ Formato cargado desde Excel: '+file.name,'ok');
+  }catch(e){
+    console.error('[nfCargarExcelOficial]', e);
+    toast('Error al leer el Excel: '+e.message,'er');
+  }
+}
+
 // Cerrar autocompletes al clic fuera
 document.addEventListener('click',function(e){
   ['nf-colab-list-body'].concat([0,1,2,3,4].map(function(i){ return 'nfm-list-body-'+i; })).forEach(function(id){
@@ -25034,7 +26220,7 @@ document.addEventListener('click',function(e){
       El listado incluirá únicamente documentos <strong>Vigentes</strong> y <strong>Próximos a vencer (≤5 meses)</strong>. Se excluirán: vencidos, obsoletos, DP, SUB.<br>
       <span style="color:var(--tx3);font-size:11px">The list will include only <strong>Active</strong> and <strong>Expiring within 5 months</strong> documents. Excluded: expired, obsolete, DP, SUB.</span>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px">
       <div onclick="selIdiomaLM('es')" id="pdf-op-es" style="border:2px solid var(--brd);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:all .15s">
         <div style="font-size:28px;margin-bottom:6px">🇨🇴</div>
         <div style="font-weight:700;font-size:13px;color:var(--tx)">Español</div>
@@ -25044,6 +26230,11 @@ document.addEventListener('click',function(e){
         <div style="font-size:28px;margin-bottom:6px">🇺🇸</div>
         <div style="font-weight:700;font-size:13px;color:var(--tx)">English</div>
         <div style="font-size:10px;color:var(--tx3);margin-top:2px">Columns in English</div>
+      </div>
+      <div onclick="selIdiomaLM('pt')" id="pdf-op-pt" style="border:2px solid var(--brd);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:all .15s">
+        <div style="font-size:28px;margin-bottom:6px">🇧🇷</div>
+        <div style="font-weight:700;font-size:13px;color:var(--tx)">Português</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:2px">Colunas em português</div>
       </div>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
