@@ -1476,6 +1476,7 @@ tbody tr:last-child td{border-bottom:none}
       <strong>una sola carpeta compartida para todas las empresas</strong>, en vez de una copia en cada carpeta.
       Configura cualquiera de las dos opciones (o ambas — se intenta primero la ruta de SharePoint):
     </div>
+    <div id="cfg-colab-diagnostico" style="font-size:11px;font-weight:600;margin-bottom:14px;padding:8px 10px;border-radius:6px;background:var(--bg3)"></div>
     <div style="margin-bottom:14px">
       <label class="fl" style="display:block;margin-bottom:4px">Ruta relativa en SharePoint (recomendado)</label>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -2743,11 +2744,19 @@ tbody tr:last-child td{border-bottom:none}
     Estos datos se imprimen en el listado que vas a generar. Quedan recordados para la próxima vez, pero puedes cambiarlos cuando quieras.
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-    <div class="fp"><label class="fl rq">Nombre — Elaboró</label><input class="fi" id="lm-firma-elab-nombre" placeholder="Nombre completo"></div>
+    <div class="fp" style="position:relative">
+      <label class="fl rq">Nombre — Elaboró</label>
+      <input class="fi" id="lm-firma-elab-nombre" placeholder="Buscar en Colaboradores..." autocomplete="off" oninput="fevBuscarColab(this.value,'lm-firma-elab-nombre','lm-firma-elab-cargo','lm-firma-elab-list')">
+      <div id="lm-firma-elab-list" style="display:none;position:fixed;background:var(--bg);border:1px solid var(--brd);border-radius:6px;z-index:99999;max-height:180px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.18)"></div>
+    </div>
     <div class="fp"><label class="fl">Cargo — Elaboró</label><input class="fi" id="lm-firma-elab-cargo" placeholder="Cargo"></div>
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-    <div class="fp"><label class="fl rq">Nombre — Revisó</label><input class="fi" id="lm-firma-rev-nombre" placeholder="Nombre completo"></div>
+    <div class="fp" style="position:relative">
+      <label class="fl rq">Nombre — Revisó</label>
+      <input class="fi" id="lm-firma-rev-nombre" placeholder="Buscar en Colaboradores..." autocomplete="off" oninput="fevBuscarColab(this.value,'lm-firma-rev-nombre','lm-firma-rev-cargo','lm-firma-rev-list')">
+      <div id="lm-firma-rev-list" style="display:none;position:fixed;background:var(--bg);border:1px solid var(--brd);border-radius:6px;z-index:99999;max-height:180px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.18)"></div>
+    </div>
     <div class="fp"><label class="fl">Cargo — Revisó</label><input class="fi" id="lm-firma-rev-cargo" placeholder="Cargo"></div>
   </div>
   <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -16789,6 +16798,12 @@ function cfgColabRender(){
   if(estLocal){
     estLocal.textContent = OD_COLAB.carpetaHandle ? '✅ Conectada en este navegador' : '— No conectada en este navegador';
     estLocal.style.color = OD_COLAB.carpetaHandle ? '#0a7a3d' : 'var(--tx3)';
+  }
+  var diag=document.getElementById('cfg-colab-diagnostico');
+  if(diag){
+    var n=(typeof colaboradores!=='undefined'&&colaboradores)?colaboradores.length:0;
+    diag.textContent = n>0 ? ('✅ '+n+' colaboradores cargados actualmente en esta sesión') : '⚠️ 0 colaboradores cargados en esta sesión — revisa la ruta/carpeta configurada, o vuelve a cargar el listado';
+    diag.style.color = n>0 ? '#0a7a3d' : '#a02020';
   }
 }
 // Prueba rutas candidatas cercanas a SP.carpetaUrl, reemplazando cada nivel
