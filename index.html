@@ -1437,6 +1437,36 @@ tbody tr:last-child td{border-bottom:none}
     </div>
   </div>
 
+  <div class="card" style="margin-top:14px;border-top:3px solid var(--T)" id="cfg-carpetas-card">
+    <div class="sh" style="margin-bottom:10px">
+      <div class="st">🌐 Carpetas SharePoint por Empresa (Novedad — verificación cruzada)</div>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:12px;line-height:1.6">
+      Define la <strong>ruta relativa de SharePoint</strong> donde vive el <code>ListadoMaestro.xlsx</code> de cada empresa.
+      Con esto, el módulo de <strong>Novedad de Documento</strong> puede revisar — al crear o modificar un documento —
+      si ya existe un nombre igual o similar en el Listado Maestro de cualquiera de las empresas, y alertar al usuario
+      antes de continuar. Deja vacía la ruta de una empresa si aún no aplica o no la vas a incluir en la verificación.
+      Ejemplo de ruta: <code>/sites/Documentacion/Procaps/Listado_Maestro</code>. Solo un Administrador puede editar esta tabla.
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11px" id="cfg-carpetas-tabla">
+        <thead>
+          <tr style="background:var(--bg3)">
+            <th style="padding:6px 8px;text-align:left;border-bottom:2px solid var(--brd)">Empresa</th>
+            <th style="padding:6px 8px;text-align:left;border-bottom:2px solid var(--brd)">Ruta relativa en SharePoint (carpeta del Listado Maestro)</th>
+          </tr>
+        </thead>
+        <tbody id="cfg-carpetas-tb"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn" onclick="cfgCarpetasGuardarTodo()">💾 Guardar cambios</button>
+      <button class="btn gh sm" onclick="cfgCarpetasUsarActual()" title="Rellena automáticamente la ruta de tu propia empresa con la carpeta donde corre esta sesión">📍 Usar carpeta actual para mi empresa</button>
+      <button class="btn gh sm" onclick="cfgCarpetasProbar()" title="Intenta leer el Listado Maestro de cada empresa configurada, para validar que las rutas y permisos son correctos">🔎 Probar conexión</button>
+    </div>
+    <div id="cfg-carpetas-resultado" style="margin-top:10px;font-size:11px;display:none"></div>
+  </div>
+
   </div>
 
 
@@ -2497,7 +2527,7 @@ tbody tr:last-child td{border-bottom:none}
             <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:10px">
               <div class="fp">
                 <label class="fl rq">Nombre del documento</label>
-                <input class="fi" type="text" id="nf-nombredoc" placeholder="Se completa del Listado Maestro o ingrese manualmente">
+                <input class="fi" type="text" id="nf-nombredoc" placeholder="Se completa del Listado Maestro o ingrese manualmente" onblur="nfCheckCoincidenciasBlur(this.value)">
               </div>
               <div class="fp">
                 <label class="fl">Origen de la novedad</label>
@@ -2677,6 +2707,36 @@ tbody tr:last-child td{border-bottom:none}
 
 <!-- MODALES -->
 
+<div class="mo" id="mo-nf-coincidencias"><div class="md" style="max-width:860px">
+  <button class="md-x" onclick="_nfCoincidenciasCancelar()">X</button>
+  <div class="md-t">⚠️ Posibles documentos similares encontrados</div>
+  <div style="font-size:12px;color:var(--tx2);margin-bottom:10px;line-height:1.5">
+    Se encontraron documentos con nombre igual o parecido a <strong id="nf-coinc-nombre"></strong> en el Listado Maestro de una o más empresas del grupo.
+    Revisa la tabla antes de continuar — puedes tratarse del mismo documento intercompañía, o de una duplicidad a evitar.
+  </div>
+  <div style="max-height:340px;overflow-y:auto;border:1px solid var(--brd);border-radius:8px">
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead style="background:var(--bg3);position:sticky;top:0">
+        <tr>
+          <th style="padding:6px 8px;text-align:left">Código</th>
+          <th style="padding:6px 8px;text-align:left">Descripción</th>
+          <th style="padding:6px 8px;text-align:left">Versión</th>
+          <th style="padding:6px 8px;text-align:left">Área</th>
+          <th style="padding:6px 8px;text-align:left">Proceso</th>
+          <th style="padding:6px 8px;text-align:left">Empresa</th>
+          <th style="padding:6px 8px;text-align:left">% Coincidencia</th>
+        </tr>
+      </thead>
+      <tbody id="nf-coinc-tbody"></tbody>
+    </table>
+  </div>
+  <div id="nf-coinc-fallidas" style="display:none;margin-top:8px;font-size:10px;color:var(--tx3);background:var(--bg3);padding:6px 8px;border-radius:6px"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+    <button class="btn gh sm" onclick="_nfCoincidenciasCancelar()">✕ Detener y revisar</button>
+    <button class="btn sm" style="background:#b8860b" onclick="_nfCoincidenciasContinuar()">➕ Continuar de todas formas</button>
+  </div>
+</div></div>
+
 <div class="mo" id="mo-doc"><div class="md lg">
   <button class="md-x" onclick="closeMo('mo-doc')">X</button>
   <div class="md-t" id="mo-doc-t">Nuevo documento</div>
@@ -2693,7 +2753,12 @@ tbody tr:last-child td{border-bottom:none}
     <div class="fp"><label class="fl rq">Version</label><input class="fi" id="d-ver" placeholder="01"></div>
     <div class="fp"><label class="fl">Tipo de Documento</label><input class="fi au" id="d-tipo" readonly placeholder="Auto segun codigo"></div>
     <div class="fp"><label class="fl">Tipo de Plantilla</label><input class="fi" id="d-tpl" placeholder="Estandar"></div>
-    <div class="fp"><label class="fl rq">Area Generadora</label><select class="fs" id="d-area" onchange="onArea()"><option value="">Selecciona</option></select></div>
+    <div class="fp">
+      <label class="fl rq">Area Generadora</label>
+      <select class="fs" id="d-area" onchange="onArea()"><option value="">Selecciona</option></select>
+      <input class="fi" id="d-area-manual" placeholder="Escribe el área nueva" style="display:none;margin-top:5px;text-transform:uppercase" oninput="onAreaManual()">
+      <div class="fh" id="d-area-manual-hint" style="display:none;color:var(--T3)">Área nueva — completa también Proceso, Administrador, Líder y Correo.</div>
+    </div>
     <div class="fp"><label class="fl">Proceso</label><input class="fi au" id="d-proc" readonly placeholder="Auto segun area"></div>
     <div class="fp"><label class="fl">Idioma</label><select class="fs" id="d-idioma"><option value="E">E - Espanol</option><option value="I">I - Ingles</option><option value="B">B - Bilingue</option></select></div>
   </div>
@@ -2719,13 +2784,29 @@ tbody tr:last-child td{border-bottom:none}
             <span onclick="_multiAll('d-inter',false)" style="font-size:10px;color:var(--tx3);cursor:pointer">✗ Ninguna</span>
           </div>
           <div id="d-inter_opts">
-<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Sofgenpharma" onchange="_multiChk('d-inter')">Sofgenpharma</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Sofgen Pharma S.A. (Holding)" onchange="_multiChk('d-inter')">Sofgen Pharma S.A. (Holding)</label>
 <label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Procaps S.A." onchange="_multiChk('d-inter')">Procaps S.A.</label>
-<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Crynssen Pharma" onchange="_multiChk('d-inter')">Crynssen Pharma</label>
-<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Pharmayect S.A." onchange="_multiChk('d-inter')">Pharmayect S.A.</label>
-<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Funtrition S.A.S." onchange="_multiChk('d-inter')">Funtrition S.A.S.</label>
-<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Procaps - Cedi" onchange="_multiChk('d-inter')">Procaps - Cedi</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="CI Procaps S.A." onchange="_multiChk('d-inter')">CI Procaps S.A.</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Crynssen Pharma S.A.S." onchange="_multiChk('d-inter')">Crynssen Pharma S.A.S.</label>
 <label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Diabetrics Healthcare S.A.S." onchange="_multiChk('d-inter')">Diabetrics Healthcare S.A.S.</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Pharmayect S.A." onchange="_multiChk('d-inter')">Pharmayect S.A.</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Funtrition S.A.S" onchange="_multiChk('d-inter')">Funtrition S.A.S</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Procaps S.A. de C.V. (antes Laboratorios López S.A de C.V)" onchange="_multiChk('d-inter')">Procaps S.A. de C.V. (antes Laboratorios López S.A de C.V)</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Biokemical S.A. de C.V." onchange="_multiChk('d-inter')">Biokemical S.A. de C.V.</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="CDI S.A." onchange="_multiChk('d-inter')">CDI S.A.</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Pharmarketing S.A." onchange="_multiChk('d-inter')">Pharmarketing S.A.</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Pharmarketing Dominicana S.R.L" onchange="_multiChk('d-inter')">Pharmarketing Dominicana S.R.L</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Pharmarketing Costa Rica S.A." onchange="_multiChk('d-inter')">Pharmarketing Costa Rica S.A.</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Unimed del Perú S.A." onchange="_multiChk('d-inter')">Unimed del Perú S.A.</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Roddome Pharmaceutical S.A." onchange="_multiChk('d-inter')">Roddome Pharmaceutical S.A.</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Colbras Industria e Comercio Ltda" onchange="_multiChk('d-inter')">Colbras Industria e Comercio Ltda</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Horslig GmbH" onchange="_multiChk('d-inter')">Horslig GmbH</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Pharminter GmbH" onchange="_multiChk('d-inter')">Pharminter GmbH</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Sofgen Pharmaceuticals LLC" onchange="_multiChk('d-inter')">Sofgen Pharmaceuticals LLC</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Funtrition LLC" onchange="_multiChk('d-inter')">Funtrition LLC</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Rymco Medical S.A.S" onchange="_multiChk('d-inter')">Rymco Medical S.A.S</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Colombiana de Suministros Médicos Hospitalarios - Colmed Ltda." onchange="_multiChk('d-inter')">Colombiana de Suministros Médicos Hospitalarios - Colmed Ltda.</label>
+<label style="display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap" onmouseover="this.style.background='var(--tlx)'" onmouseout="this.style.background=''"><input type="checkbox" value="Procaps Farmacéutica Bolivia S.A" onchange="_multiChk('d-inter')">Procaps Farmacéutica Bolivia S.A</label>
           </div>
         </div>
       </div>
@@ -2733,7 +2814,7 @@ tbody tr:last-child td{border-bottom:none}
   </div>
   <div class="fsec">Responsables</div>
   <div class="fg3" style="margin-bottom:3px">
-    <div class="fp"><label class="fl">Administrador</label><input class="fi au" id="d-adm" readonly></div>
+    <div class="fp"><label class="fl">Administrador</label><select class="fs au" id="d-adm"><option value="">Selecciona empresa</option><option value="Sofgen Pharma S.A. (Holding)">Sofgen Pharma S.A. (Holding)</option><option value="Procaps S.A.">Procaps S.A.</option><option value="CI Procaps S.A.">CI Procaps S.A.</option><option value="Crynssen Pharma S.A.S.">Crynssen Pharma S.A.S.</option><option value="Diabetrics Healthcare S.A.S.">Diabetrics Healthcare S.A.S.</option><option value="Pharmayect S.A.">Pharmayect S.A.</option><option value="Funtrition S.A.S">Funtrition S.A.S</option><option value="Procaps S.A. de C.V. (antes Laboratorios López S.A de C.V)">Procaps S.A. de C.V. (antes Laboratorios López S.A de C.V)</option><option value="Biokemical S.A. de C.V.">Biokemical S.A. de C.V.</option><option value="CDI S.A.">CDI S.A.</option><option value="Pharmarketing S.A.">Pharmarketing S.A.</option><option value="Pharmarketing Dominicana S.R.L">Pharmarketing Dominicana S.R.L</option><option value="Pharmarketing Costa Rica S.A.">Pharmarketing Costa Rica S.A.</option><option value="Unimed del Perú S.A.">Unimed del Perú S.A.</option><option value="Roddome Pharmaceutical S.A.">Roddome Pharmaceutical S.A.</option><option value="Colbras Industria e Comercio Ltda">Colbras Industria e Comercio Ltda</option><option value="Horslig GmbH">Horslig GmbH</option><option value="Pharminter GmbH">Pharminter GmbH</option><option value="Sofgen Pharmaceuticals LLC">Sofgen Pharmaceuticals LLC</option><option value="Funtrition LLC">Funtrition LLC</option><option value="Rymco Medical S.A.S">Rymco Medical S.A.S</option><option value="Colombiana de Suministros Médicos Hospitalarios - Colmed Ltda.">Colombiana de Suministros Médicos Hospitalarios - Colmed Ltda.</option><option value="Procaps Farmacéutica Bolivia S.A">Procaps Farmacéutica Bolivia S.A</option></select></div>
     <div class="fp"><label class="fl">Lider de Proceso</label><input class="fi au" id="d-lid" readonly></div>
     <div class="fp"><label class="fl">Correo</label><input class="fi au" id="d-cor" readonly></div>
     <div class="fp" style="position:relative">
@@ -3465,7 +3546,7 @@ function populateFiltros(){
   fill('f-proc',LC.procs,'Todos los procesos');
   fill('f-area',LC.areas,'Todas las areas');
   var da=document.getElementById('d-area');
-  if(da){var v=da.value;da.innerHTML='<option value="">Selecciona</option>'+LC.areas.map(function(a){return'<option value="'+a+'">'+a+'</option>';}).join('');if(v)da.value=v;}
+  if(da){var v=da.value;da.innerHTML='<option value="">Selecciona</option><option value="__nueva__">➕ Área nueva (no está en el listado)</option>'+LC.areas.map(function(a){return'<option value="'+a+'">'+a+'</option>';}).join('');if(v)da.value=v;}
 }
 
 // ============================================================
@@ -3667,7 +3748,28 @@ function _navGetNodes(){if(!_navPgNodes)_navPgNodes=Array.from(document.querySel
 // sesión por inactividad), el bloqueo se considera abandonado y se libera
 // automáticamente para que otro usuario pueda entrar.
 var LOCKABLE_MODULES = ['docs','copias','entregacc','insp','usrs','cfg','extvigor','marobs','fextvig','rutabor','novedad','correos'];
-var _miSesionId = 'ses_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+// _miSesionId se guarda en sessionStorage (no solo en una variable JS) para
+// que sobreviva a un refresco (F5) de la misma pestaña. Antes se generaba un
+// id nuevo en cada carga de página: si el usuario refrescaba estando dentro
+// de un módulo bloqueado, el navegador no siempre alcanza a terminar de
+// escribir la liberación del bloqueo antes de descargar la página (la
+// escritura es asíncrona, contra un archivo remoto en OneDrive/SharePoint).
+// Al recargar, el id de sesión cambiaba, así que el propio usuario quedaba
+// identificado como "otra sesión" ocupando el módulo — bloqueándose a sí
+// mismo hasta que venciera el latido, aunque en realidad nadie más lo
+// estuviera usando. Con el id persistido en sessionStorage, un refresco
+// conserva el mismo id y el sistema reconoce que sigue siendo la misma
+// sesión, renovando el bloqueo en vez de negarle la entrada.
+var _miSesionId = (function(){
+  try{
+    var k='_lockSesionId';
+    var v = sessionStorage.getItem(k);
+    if(!v){ v='ses_'+Date.now()+'_'+Math.random().toString(36).slice(2,8); sessionStorage.setItem(k,v); }
+    return v;
+  }catch(e){
+    return 'ses_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+  }
+})();
 var _moduloConBloqueoActual = null;
 var _lockHeartbeatTimer = null;
 
@@ -6146,7 +6248,7 @@ var TMAP = [
   {p:'F-',t:'Formato'},{p:'DA-',t:'Documento Asociado'},{p:'POL-',t:'Politica'},
   {p:'NI-',t:'Norma Interna'},{p:'SUB-',t:'Subproceso'},{p:'DP-',t:'Descripcion De Procesos'},
   {p:'MAN-',t:'Manual'},{p:'PRO-',t:'Protocolo'},{p:'PLA',t:'Planos'},
-  {p:'CR-',t:'Cronograma'},{p:'MTZ',t:'Matriz'},{p:'MP-',t:'Mapa De Procesos'},{p:'LM-',t:'Listado'}
+  {p:'CR-',t:'Cronograma'},{p:'CRG-',t:'Cronograma'},{p:'MTZ',t:'Matriz'},{p:'AMF-',t:'Análisis Modal de Fallas'},{p:'MP-',t:'Mapa De Procesos'},{p:'LM-',t:'Listado'}
 ];
 var TR = {procedimiento:'Procedure',instructivo:'Instructional',formato:'Format',politica:'Policy',manual:'Manual',registro:'Record',plan:'Plan',protocolo:'Protocol',programa:'Program',norma:'Standard',subproceso:'Subprocess',descripcion:'Description',de:'Of',del:'Of The',la:'The',los:'The',las:'The',el:'The',en:'In',para:'For',y:'And',con:'With',gestion:'Management',calidad:'Quality',produccion:'Production',logistica:'Logistics',proceso:'Process',sistema:'System',documentacion:'Documentation',mejora:'Improvement',control:'Control',seguridad:'Safety',recursos:'Resources',humanos:'Human',compras:'Purchasing',almacen:'Warehouse',planta:'Plant',fabricacion:'Manufacturing',analisis:'Analysis',revision:'Review',evaluacion:'Evaluation',administracion:'Administration',mantenimiento:'Maintenance',calibracion:'Calibration',validacion:'Validation',caracterizacion:'Characterization',cumplimiento:'Compliance'};
 
@@ -6259,11 +6361,58 @@ async function docAutoTraducirDescripcion(v){
   }
 }
 function onArea() {
-  var area = document.getElementById('d-area').value;
+  var sel = document.getElementById('d-area');
+  var area = sel.value;
+  var manualInput = document.getElementById('d-area-manual');
+  var manualHint  = document.getElementById('d-area-manual-hint');
+  // 'd-adm' es un <select> (empresa); los demás son texto libre.
+  var camposAuto  = [
+    {id:'d-proc', ph:'Escribe el proceso'},
+    {id:'d-adm',  ph:''},
+    {id:'d-lid',  ph:'Escribe el líder de proceso'},
+    {id:'d-cor',  ph:'Escribe el correo'}
+  ];
+  function bloquear(el, bloquear){
+    if(el.tagName==='SELECT'){ el.disabled=bloquear; }
+    else { el.readOnly=bloquear; }
+  }
+
+  if (area === '__nueva__') {
+    // Área nueva: no está en el Listado Maestro — se habilita registro manual
+    if (manualInput) { manualInput.style.display='block'; manualInput.value=''; manualInput.focus(); }
+    if (manualHint)  manualHint.style.display='block';
+    camposAuto.forEach(function(c){
+      var el=document.getElementById(c.id);
+      if(!el) return;
+      bloquear(el, false);
+      el.classList.remove('au');
+      el.value='';
+      if(c.ph) el.placeholder=c.ph;
+    });
+    return;
+  }
+
+  // Área existente en el Listado Maestro: ocultar campo manual y autocompletar (solo lectura)
+  if (manualInput) { manualInput.style.display='none'; manualInput.value=''; }
+  if (manualHint)  manualHint.style.display='none';
+  camposAuto.forEach(function(c){
+    var el=document.getElementById(c.id);
+    if(!el) return;
+    bloquear(el, true);
+    el.classList.add('au');
+  });
   document.getElementById('d-proc').value = LC.areaAProceso[area] || '';
   document.getElementById('d-lid').value  = LC.areaALider[area]   || '';
   document.getElementById('d-adm').value  = LC.areaAAdmin[area]   || '';
   document.getElementById('d-cor').value  = LC.areaACorreo[area]  || '';
+}
+// Mantiene en mayúsculas el área nueva mientras el usuario la escribe
+function onAreaManual(){
+  var el=document.getElementById('d-area-manual');
+  if(!el) return;
+  var pos=el.selectionStart;
+  el.value=el.value.toUpperCase();
+  el.setSelectionRange(pos,pos);
 }
 function calcVencByPrefix(cod, fvig, esObsoleto) {
   // Obsoletos: sin fecha de vencimiento
@@ -6355,6 +6504,19 @@ function openNewDoc() {
   document.getElementById('d-fvenc').dataset = document.getElementById('d-fvenc').dataset || {};
   document.getElementById('d-fvenc').dataset.iso = '';
   document.getElementById('d-est').value = '';
+  // Restaurar campo de área manual y bloqueo de proceso/admin/lider/correo
+  // (por si quedaron habilitados de una edición anterior de área nueva)
+  var manualInput=document.getElementById('d-area-manual');
+  if(manualInput){manualInput.style.display='none';manualInput.value='';}
+  var manualHint=document.getElementById('d-area-manual-hint');
+  if(manualHint) manualHint.style.display='none';
+  ['d-proc','d-adm','d-lid','d-cor'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el) return;
+    if(el.tagName==='SELECT'){ el.disabled=true; } else { el.readOnly=true; el.placeholder=''; }
+    el.classList.add('au');
+  });
+  document.getElementById('d-proc').placeholder='Auto segun area';
   window._docEmailCtx={accion:'nuevo', verAnterior:'', verNueva:''};
   populateFiltros();
   openMo('mo-doc');
@@ -6428,12 +6590,36 @@ function _saveDocOriginal() {
   if (!fvencISO && fvig) { fvencISO=calcVencByPrefix(cod,fvig,document.getElementById('d-obs').value); if(!fvencISO){var dt=new Date(fvig+'T12:00:00');dt.setFullYear(dt.getFullYear()+3);fvencISO=fD(dt);} }
   var obs = document.getElementById('d-obs').value;
   var ext = document.getElementById('d-ext').value;
+  // Área generadora: si se seleccionó "Área nueva", tomar el valor escrito
+  // manualmente en vez del select. Se exige texto no vacío en ese caso.
+  var areaSelVal = document.getElementById('d-area').value;
+  var areaFinal = areaSelVal;
+  if (areaSelVal === '__nueva__') {
+    areaFinal = (document.getElementById('d-area-manual').value || '').trim().toUpperCase();
+    if (!areaFinal) {
+      toast('Escribe el nombre del área nueva (no está en el Listado Maestro)', 'er');
+      var elAreaM = document.getElementById('d-area-manual');
+      if (elAreaM) { elAreaM.style.borderColor = 'var(--R)'; elAreaM.focus(); setTimeout(function(){elAreaM.style.borderColor='';}, 3000); }
+      return;
+    }
+    // Al registrar un área nueva, también deben registrarse manualmente sus
+    // responsables (no hay datos previos del Listado Maestro de dónde tomarlos)
+    var faltantes=[];
+    [['d-proc','Proceso'],['d-adm','Administrador'],['d-lid','Líder de Proceso'],['d-cor','Correo']].forEach(function(f){
+      var el=document.getElementById(f[0]);
+      if(!el||!(el.value||'').trim()) faltantes.push(f[1]);
+    });
+    if (faltantes.length) {
+      toast('Área nueva: completa también '+faltantes.join(', '), 'er');
+      return;
+    }
+  }
   var data = {
     codigoActual:cod, codigoAntiguo:document.getElementById('d-codant').value||'No Aplica',
     descripcion:desc, descriptionEn:document.getElementById('d-desen').value,
     descriptionPt:document.getElementById('d-despt')?document.getElementById('d-despt').value:'',
     version:document.getElementById('d-ver').value, tipoDocumento:document.getElementById('d-tipo').value,
-    tipoPlantilla:document.getElementById('d-tpl').value, areaGeneradora:document.getElementById('d-area').value,
+    tipoPlantilla:document.getElementById('d-tpl').value, areaGeneradora:areaFinal,
     proceso:document.getElementById('d-proc').value, idioma:document.getElementById('d-idioma').value,
     fechaVigencia:fvig, fechaVencimiento:fvencISO, extensionVigencia:ext, obsoleto:obs,
     estado:calcEst(fvencISO, obs, ext),
@@ -6614,8 +6800,53 @@ function editDoc(id) {
   document.getElementById('d-eid').value = id;
   document.getElementById('mo-doc-t').textContent = 'Editar documento';
   window._docEmailCtx={accion:'edicion', verAnterior:d.version||'', verNueva:d.version||''};
-  var map = {cod:'codigoActual',codant:'codigoAntiguo',desc:'descripcion',desen:'descriptionEn',despt:'descriptionPt',ver:'version',tipo:'tipoDocumento',tpl:'tipoPlantilla',proc:'proceso',idioma:'idioma',fvig:'fechaVigencia',ext:'extensionVigencia',obs:'obsoleto',adm:'administrador',lid:'liderProceso',cor:'correoElectronico',alc:'alcanceEmpresas',aapl:'areasAplicables',drel:'docsRelacionados'};
+  var map = {cod:'codigoActual',codant:'codigoAntiguo',desc:'descripcion',desen:'descriptionEn',despt:'descriptionPt',ver:'version',tipo:'tipoDocumento',tpl:'tipoPlantilla',proc:'proceso',idioma:'idioma',fvig:'fechaVigencia',ext:'extensionVigencia',obs:'obsoleto',lid:'liderProceso',cor:'correoElectronico',alc:'alcanceEmpresas',aapl:'areasAplicables',drel:'docsRelacionados'};
   for (var k in map) { var el = document.getElementById('d-'+k); if (el) el.value = d[map[k]] || ''; }
+  // Administrador ahora es un <select> de empresas. Si el documento tiene un
+  // valor guardado (p.ej. un nombre de persona de antes de este cambio) que
+  // no corresponde a ninguna empresa del listado, se agrega como opción
+  // adicional para no perder el dato al editar.
+  (function(){
+    var selAdm=document.getElementById('d-adm');
+    if(!selAdm) return;
+    var valor=d.administrador||'';
+    var existe=Array.prototype.some.call(selAdm.options, function(o){return o.value===valor;});
+    if(valor && !existe){
+      var op=document.createElement('option');
+      op.value=valor; op.textContent=valor+' (valor anterior)';
+      selAdm.insertBefore(op, selAdm.firstChild.nextSibling);
+    }
+    selAdm.value=valor;
+  })();
+  // Área: si el área del documento ya existe en el Listado Maestro, se
+  // selecciona normalmente y los campos quedan solo-lectura (auto). Si no
+  // existe como opción (caso raro), se activa el modo manual con el valor
+  // ya guardado, para no perder la información al editar.
+  (function(){
+    var selArea=document.getElementById('d-area');
+    var manualInput=document.getElementById('d-area-manual');
+    var manualHint=document.getElementById('d-area-manual-hint');
+    var camposManual=['d-proc','d-adm','d-lid','d-cor'];
+    function bloquear(el, bloq){ if(el.tagName==='SELECT'){el.disabled=bloq;} else {el.readOnly=bloq;} }
+    if(!selArea) return;
+    selArea.value=d.areaGeneradora||'';
+    if(selArea.value===(d.areaGeneradora||'') && d.areaGeneradora){
+      // Coincidió con una opción existente del listado
+      if(manualInput){manualInput.style.display='none';manualInput.value='';}
+      if(manualHint) manualHint.style.display='none';
+      camposManual.forEach(function(id){var el=document.getElementById(id);if(el){bloquear(el,true);el.classList.add('au');}});
+    } else if(d.areaGeneradora){
+      // El área guardada no está en el listado (caso raro) — modo manual
+      selArea.value='__nueva__';
+      if(manualInput){manualInput.style.display='block';manualInput.value=d.areaGeneradora;}
+      if(manualHint) manualHint.style.display='block';
+      camposManual.forEach(function(id){var el=document.getElementById(id);if(el){bloquear(el,false);el.classList.remove('au');}});
+    } else {
+      if(manualInput){manualInput.style.display='none';manualInput.value='';}
+      if(manualHint) manualHint.style.display='none';
+      camposManual.forEach(function(id){var el=document.getElementById(id);if(el){bloquear(el,true);el.classList.add('au');}});
+    }
+  })();
   // Re-generar traduccion si no existe o forzar desde descripcion actual
   var descEl = document.getElementById('d-desc');
   var denEl  = document.getElementById('d-desen');
@@ -6651,7 +6882,6 @@ function editDoc(id) {
     });
   })();
   populateFiltros();
-  document.getElementById('d-area').value = d.areaGeneradora || '';
   // Mostrar alerta de copias controladas
   var ca = copiasEmpresa().filter(function(x){return x.codigo===d.codigoActual;});
   var copWarn = document.getElementById('d-copias-warn');
@@ -10114,7 +10344,7 @@ function limpM(){
 // ============================================================
 // CONFIGURACION
 // ============================================================
-function renderCfg(){document.getElementById('c-org').value=cfg.org||'Sofgen Pharma';document.getElementById('c-rev').value=cfg.revDias||365;document.getElementById('c-aler').value=cfg.alertDias||30;if(typeof cfgFormatosRender==='function')cfgFormatosRender();}
+function renderCfg(){document.getElementById('c-org').value=cfg.org||'Sofgen Pharma';document.getElementById('c-rev').value=cfg.revDias||365;document.getElementById('c-aler').value=cfg.alertDias||30;if(typeof cfgFormatosRender==='function')cfgFormatosRender();if(typeof cfgCarpetasRender==='function')cfgCarpetasRender();}
 function saveConf(){cfg={org:document.getElementById('c-org').value||'Sofgen Pharma',revDias:parseInt(document.getElementById('c-rev').value)||365,alertDias:parseInt(document.getElementById('c-aler').value)||30};saveArr('cfg',cfg);toast('Configuracion guardada');}
 function clearAll(){
   if(!confirm('Borrar TODOS los datos?'))return;
@@ -14848,6 +15078,16 @@ function revdoc_leerWord(){
             })
             // 4. Unir código partido: F-\nSOP-0001 (prefijo separado de código)
             .replace(/\b([A-Z]{1,4})-\s+([A-Z]{2,4}-\d)/g,'$1-$2')
+            // 4.1. Reparar sufijo de empresa partido en dos runs por Word
+            //      (ej: "SOP-0041-CR Y" → "SOP-0041-CRY", porque "CR" es a la
+            //      vez un prefijo válido de otro tipo de documento, y el
+            //      detector de sufijos no reconoce el corte a menos que se
+            //      reconstruya la palabra completa primero)
+            .replace(/-([A-Z]{1,3})\s+([A-Z]{1,3})\b(?!-)/g,function(m,a,b){
+              var merged=(a+b).toUpperCase();
+              var validos=['COR','CIP','CRY','DIA','PHA','FTN','PRS','BIK','CDN','CDG','PHP','PHD','PHC','UNP','ROD','CBR','HOR','PHS','SPH','FTU','RYM','COM','PRB'];
+              return validos.indexOf(merged)>=0 ? ('-'+merged) : m;
+            })
             // 5. Unir versión partida: "VERSIÓN: 2\n7" → "VERSIÓN: 27"
             .replace(/(VERSI[OÓ]N\s*:\s*\d{1,2})\s+(\d{1,2})(?=\s)/gi,'$1$2')
             // 6. Normalizar espacios múltiples
@@ -15036,10 +15276,15 @@ var SUFIJOS_EMPRESA_TODAS = 'COR|CIP|CRY|DIA|PHA|FTN|PRS|BIK|CDN|CDG|PHP|PHD|PHC
 // varía según la empresa: unas usan guion ("INST-0007-CRY", Crynssen) y
 // otras usan espacio ("INST-0007 PHA", Pharmayect) — se acepta cualquiera
 // de los dos en la lectura, y siempre se normaliza a guion en el resultado.
-var _reSepSufijoEmpresa = new RegExp('[\\s-]+('+SUFIJOS_EMPRESA_TODAS+')\\b','i');
+var _reSepSufijoEmpresa = new RegExp('[\\s-]*('+SUFIJOS_EMPRESA_TODAS+')(?![A-Za-z])','i');
+// Segunda pasada: limpia el separador entre el sufijo y el subnúmero final de
+// un Formato (ej. "PHA- 1", "PHA 1" o "PHA1" pegado → siempre "PHA-1").
+var _reSufSubnum = new RegExp('('+SUFIJOS_EMPRESA_TODAS+')[\\s-]*(\\d{1,3})$','i');
 function _normalizarCodigoSufijo(cod){
   if(!cod) return cod;
-  return cod.toUpperCase().trim().replace(_reSepSufijoEmpresa,'-$1').replace(/--+/g,'-');
+  var out=cod.toUpperCase().trim().replace(_reSepSufijoEmpresa,'-$1').replace(/--+/g,'-');
+  out=out.replace(_reSufSubnum,'$1-$2');
+  return out;
 }
 // Mapa sufijo → razón social completa de la empresa. Procaps S.A. es la
 // única sin sufijo (código "desnudo"), por eso es el valor por defecto
@@ -15100,7 +15345,10 @@ function revdoc_procesarAnalisis(){
   // El ":" puede faltar si el encabezado es una tabla Word con celdas separadas
   // También reconoce el sufijo de empresa si está presente, con guion o espacio
   // como separador (ej. INST-1078-CRY o INST-1078 PHA)
-  var codFormato=new RegExp('C[OÓ]D(?:IGO)?\\s*:?\\s*([A-Z]{2,6}-\\d{3,6}(?:[\\s-]+(?:'+SUFIJOS_EMPRESA_TODAS+'))?)','i').exec(texto);
+  // Lista de prefijos auto-contenida (no depende de PREFIJOS_RE, que se define
+  // más abajo en el archivo y aun no tendria valor asignado en este punto).
+  var PREFIJOS_INTENTO1='SOP|INST|PRG|PLN|POL|MAN|SUB|LM|DP|DM|MP|NI|CAR|COD|DA|F|VT|USGP|ME|RG|IT|LOG|EST|CRG|CR|MTZ|AMF';
+  var codFormato=new RegExp('C[OÓ]D(?:IGO)?\\s*:?\\s*((?:(?:'+PREFIJOS_INTENTO1+')-){1,3}\\d{3,6}(?:[\\s-]*(?:'+SUFIJOS_EMPRESA_TODAS+')(?![A-Za-z]))?(?:[\\s-]*\\d{1,3})?)','i').exec(texto);
   if(codFormato){
     codEncontrado=_normalizarCodigoSufijo(codFormato[1]);
   }
@@ -15110,8 +15358,8 @@ function revdoc_procesarAnalisis(){
   // (también reconoce sufijo de empresa con guion o espacio: "INST-1078-CRY V02.docx" o "INST-1078 PHA V02.docx")
   if(!codEncontrado && revdoc_archivo){
     var nombreArch=revdoc_archivo.name||'';
-    var PREFIJOS_ARCH='SOP|INST|PRG|PLN|POL|MAN|SUB|LM|DP|DM|MP|NI|CAR|COD|DA|VT|USGP|ME|RG|IT|LOG|EST';
-    var regNombre=new RegExp('\\b((?:(?:'+PREFIJOS_ARCH+')-){1,2}\\d{3,6}(?:[\\s-]+(?:'+SUFIJOS_EMPRESA_TODAS+')\\b)?)','i');
+    var PREFIJOS_ARCH='SOP|INST|PRG|PLN|POL|MAN|SUB|LM|DP|DM|MP|NI|CAR|COD|DA|VT|USGP|ME|RG|IT|LOG|EST|CRG|CR|MTZ|AMF';
+    var regNombre=new RegExp('\\b((?:(?:'+PREFIJOS_ARCH+')-){1,2}\\d{3,6}(?:[\\s-]*(?:'+SUFIJOS_EMPRESA_TODAS+')(?![A-Za-z]))?(?:[\\s-]*\\d{1,3})?)','i');
     var mNombre=regNombre.exec(nombreArch.toUpperCase());
     if(mNombre) codEncontrado=_normalizarCodigoSufijo(mNombre[1]);
   }
@@ -15119,7 +15367,7 @@ function revdoc_procesarAnalisis(){
   //  Intento 3: fallback — primer código en el texto (puede ser incorrecto)
   if(!codEncontrado){
     var prefijos=TMAP.map(function(t){return t.p.replace('-','\\-');}).join('|');
-    var regCodigo=new RegExp('('+prefijos+')(\\d{3,6}(?:[\\s-]+(?:'+SUFIJOS_EMPRESA_TODAS+')\\b)?)','i');
+    var regCodigo=new RegExp('('+prefijos+')(\\d{3,6}(?:[\\s-]*(?:'+SUFIJOS_EMPRESA_TODAS+')(?![A-Za-z]))?(?:[\\s-]*\\d{1,3})?)','i');
     var mCod=regCodigo.exec(texto);
     if(mCod){
       var prefijo=mCod[1].toUpperCase();
@@ -15127,8 +15375,8 @@ function revdoc_procesarAnalisis(){
       var codFallback=_normalizarCodigoSufijo(prefijo+mCod[2]);
       //  Intento 4: si el fallback difiere del nombre del archivo, preferir el nombre
       if(revdoc_archivo){
-        var PREFIJOS_ARCH2='SOP|INST|PRG|PLN|POL|MAN|SUB|LM|DP|DM|MP|NI|CAR|COD|DA|VT|USGP|ME|RG|IT|LOG|EST';
-        var regNombre2=new RegExp('\\b((?:(?:'+PREFIJOS_ARCH2+')-){1,2}\\d{3,6}(?:[\\s-]+(?:'+SUFIJOS_EMPRESA_TODAS+')\\b)?)','i');
+        var PREFIJOS_ARCH2='SOP|INST|PRG|PLN|POL|MAN|SUB|LM|DP|DM|MP|NI|CAR|COD|DA|VT|USGP|ME|RG|IT|LOG|EST|CRG|CR|MTZ|AMF';
+        var regNombre2=new RegExp('\\b((?:(?:'+PREFIJOS_ARCH2+')-){1,2}\\d{3,6}(?:[\\s-]*(?:'+SUFIJOS_EMPRESA_TODAS+')(?![A-Za-z]))?(?:[\\s-]*\\d{1,3})?)','i');
         var mN2=regNombre2.exec((revdoc_archivo.name||'').toUpperCase());
         var codNombre2=mN2?_normalizarCodigoSufijo(mN2[1]):null;
         if(codNombre2&&codNombre2!==codFallback){
@@ -15243,7 +15491,8 @@ function revdoc_procesarAnalisis(){
 // Prefijos simples conocidos (sin guión)
 var TODOS_PREFIJOS=[
   'SOP','INST','PRG','PLN','POL','MAN','SUB','LM','DP','DM','MP','NI',
-  'CAR','COD','DA','DP','F','VT','USGP','DAT','ME','RG','IT','LOG','EST'
+  'CAR','COD','DA','DP','F','VT','USGP','DAT','ME','RG','IT','LOG','EST',
+  'CRG','CR','MTZ','AMF'
 ];
 
 // Normalizar texto: mayúsculas, limpiar caracteres no útiles
@@ -15373,13 +15622,13 @@ function agregarCodigo(comoAparece){
 //
 // Patrón general: [F-|DA-|...] PREFIJO-NNNN[-COR][-N] o USGP-NNN[-NNN]
 
-var PREFIJOS_RE='SOP|INST|PRG|PLN|POL|MAN|SUB|LM|DP|DM|MP|NI|CAR|COD|DA|DP|F|VT|USGP|NI|MAN|ME|RG|IT|LOG|EST';
+var PREFIJOS_RE='SOP|INST|PRG|PLN|POL|MAN|SUB|LM|DP|DM|MP|NI|CAR|COD|DA|DP|F|VT|USGP|NI|MAN|ME|RG|IT|LOG|EST|CRG|CR|MTZ|AMF';
 
 var regPrincipal=new RegExp(
   // Patrón general: combinación de hasta 3 segmentos de letras separados por guión, luego número base,
   // luego opcionalmente -COR y/o sufijo numérico o de empresa.
   // \d{3,6}: mínimo 3 dígitos para evitar falsos positivos en años o números cortos.
-  '\\b((?:(?:'+PREFIJOS_RE+')-){1,3}\\d{3,6}(?:[\\s-]+(?:'+SUFIJOS_EMPRESA_TODAS+'))?(?:-\\d{1,3})?)\\b',
+  '\\b((?:(?:'+PREFIJOS_RE+')-){1,3}\\d{3,6}(?:[\\s-]*(?:'+SUFIJOS_EMPRESA_TODAS+')(?![A-Za-z]))?(?:[\\s-]*\\d{1,3})?)\\b',
   'g'
 );
 
@@ -15421,7 +15670,7 @@ while((mDA=regDA.exec(textoLimpio))!==null){
 // Tercera pasada: buscar códigos con sufijo de empresa al final
 // Ejemplo: SOP-0001-PHA, INST-0001-CRY
 var regEmpresa=new RegExp(
-  '\\b((?:(?:'+PREFIJOS_RE+')-){1,3}\\d{3,6}[\\s-]+(?:'+SUFIJOS_EMPRESA_TODAS+')(?:-\\d{1,3})?)\\b',
+  '\\b((?:(?:'+PREFIJOS_RE+')-){1,3}\\d{3,6}[\\s-]*(?:'+SUFIJOS_EMPRESA_TODAS+')(?![A-Za-z])(?:[\\s-]*\\d{1,3})?)\\b',
   'g'
 );
 regEmpresa.lastIndex=0;
@@ -16190,10 +16439,10 @@ var FORMATOS_OFICIALES_DEFAULT = {
     listado: { cod:'LM-0019', ver:'00' }
   },
   'Crynssen Pharma S.A.S.': {
-    extvig:  { cod:'F-SOP-0001-3', ver:'01' },
-    acta:    { cod:'F-SOP-0001-4', ver:'01' },
-    novedad: { cod:'F-SOP-0001-5', ver:'01' },
-    listado: { cod:'LM-0019', ver:'00' }
+    extvig:  { cod:'F-SOP-0001-CRY-4', ver:'03' },
+    acta:    { cod:'F-SOP-0001-CRY-3', ver:'04' },
+    novedad: { cod:'F-SOP-0001-CRY-2', ver:'04' },
+    listado: { cod:'LM-0002-CRY', ver:'00' }
   },
   'Diabetrics Healthcare S.A.S.': {
     extvig:  { cod:'F-SOP-0001-3', ver:'01' },
@@ -16250,16 +16499,16 @@ var FORMATOS_OFICIALES_DEFAULT = {
     listado: { cod:'LM-0019', ver:'00' }
   },
   'Unimed del Perú S.A.': {
-    extvig:  { cod:'F-SOP-0001-3', ver:'01' },
-    acta:    { cod:'F-SOP-0001-4', ver:'01' },
-    novedad: { cod:'F-SOP-0001-5', ver:'01' },
-    listado: { cod:'LM-0019', ver:'00' }
+    extvig:  { cod:'F-SOP-0001-UNP-2-', ver:'00' },
+    acta:    { cod:'F-SOP-0001-UNP-3', ver:'00' },
+    novedad: { cod:'F-SOP-0001-UNP-1', ver:'00' },
+    listado: { cod:'LM-0001-UNP', ver:'00' }
   },
   'Roddome Pharmaceutical S.A.': {
-    extvig:  { cod:'F-SOP-0001-3', ver:'01' },
-    acta:    { cod:'F-SOP-0001-4', ver:'01' },
-    novedad: { cod:'F-SOP-0001-5', ver:'01' },
-    listado: { cod:'LM-0019', ver:'00' }
+    extvig:  { cod:'F-SOP-0001-ROD-2', ver:'00' },
+    acta:    { cod:'F-SOP-0001-ROD-3', ver:'00' },
+    novedad: { cod:'F-SOP-0001-ROD-1', ver:'00' },
+    listado: { cod:'LM-0001-ROD', ver:'00' }
   },
   'Colbras Industria e Comercio Ltda': {
     extvig:  { cod:'F-SOP-0001-3', ver:'01' },
@@ -16320,8 +16569,304 @@ function guardarFormatosOficiales(){
   saveArr('formatosOficiales', FORMATOS_OFICIALES);
 }
 
+// ============================================================
+// CARPETAS SHAREPOINT POR EMPRESA + VERIFICACIÓN CRUZADA DE
+// NOMBRES EN NOVEDAD DE DOCUMENTO
+// ============================================================
+// Permite que, al crear o modificar un documento desde el módulo de
+// Novedad, la app revise si ya existe un nombre igual o parecido en el
+// Listado Maestro de CUALQUIERA de las empresas del grupo (no solo la
+// propia), y alerte al usuario antes de continuar. Requiere que un
+// Administrador configure, una sola vez, la ruta relativa de SharePoint
+// donde vive el ListadoMaestro.xlsx de cada empresa (tabla en
+// Configuración → "Carpetas SharePoint por Empresa").
+var EMPRESAS_CARPETAS_DEFAULT = {
+  'Sofgen Pharma S.A. (Holding)': '',
+  'Procaps S.A.': '',
+  'CI Procaps S.A.': '',
+  'Crynssen Pharma S.A.S.': '',
+  'Diabetrics Healthcare S.A.S.': '',
+  'Pharmayect S.A.': '',
+  'Funtrition S.A.S': '',
+  'Procaps S.A. de C.V. (antes Laboratorios López S.A de C.V)': '',
+  'Biokemical S.A. de C.V.': '',
+  'CDI S.A.': '',
+  'Pharmarketing S.A.': '',
+  'Pharmarketing Dominicana S.R.L': '',
+  'Pharmarketing Costa Rica S.A.': '',
+  'Unimed del Perú S.A.': '',
+  'Roddome Pharmaceutical S.A.': '',
+  'Colbras Industria e Comercio Ltda': '',
+  'Horslig GmbH': '',
+  'Pharminter GmbH': '',
+  'Sofgen Pharmaceuticals LLC': '',
+  'Funtrition LLC': '',
+  'Rymco Medical S.A.S': '',
+  'Colombiana de Suministros Médicos Hospitalarios - Colmed Ltda.': '',
+  'Procaps Farmacéutica Bolivia S.A': ''
+};
+var EMPRESAS_CARPETAS = loadObj('empresasCarpetas', EMPRESAS_CARPETAS_DEFAULT);
+function guardarEmpresasCarpetas(){ saveArr('empresasCarpetas', EMPRESAS_CARPETAS); }
+
+// ── Administración (pantalla Configuración) de EMPRESAS_CARPETAS ───────
+function cfgCarpetasRender(){
+  var card=document.getElementById('cfg-carpetas-card');
+  var esAdmin = !!(currentUser && currentUser.rol==='Administrador');
+  // Igual que Formatos Oficiales: exclusivo del rol Administrador, sin
+  // importar los permisos personalizados que otros roles tengan sobre
+  // la página "Configuración".
+  if(card) card.style.display = esAdmin ? '' : 'none';
+  if(!esAdmin) return;
+  var tb=document.getElementById('cfg-carpetas-tb');
+  if(!tb) return;
+  var empresas=Object.keys(EMPRESAS_CARPETAS);
+  tb.innerHTML=empresas.map(function(emp){
+    var ruta=EMPRESAS_CARPETAS[emp]||'';
+    return '<tr data-emp="'+homeEscape(emp)+'" style="border-top:1px solid var(--brd)">'
+      +'<td style="padding:6px 8px;font-weight:600;white-space:nowrap">'+homeEscape(emp)+'</td>'
+      +'<td style="padding:6px 8px"><input class="fi" style="font-size:11px;padding:4px 6px" data-campo="ruta" value="'+homeEscape(ruta)+'" placeholder="/sites/Documentacion/.../Listado_Maestro"></td>'
+      +'</tr>';
+  }).join('');
+}
+function cfgCarpetasGuardarTodo(){
+  if(!(currentUser && currentUser.rol==='Administrador')){ toast('Solo un Administrador puede modificar las carpetas por empresa','er'); return; }
+  var tb=document.getElementById('cfg-carpetas-tb');
+  if(!tb) return;
+  var nuevo={};
+  tb.querySelectorAll('tr[data-emp]').forEach(function(tr){
+    var emp=tr.getAttribute('data-emp');
+    var input=tr.querySelector('input[data-campo="ruta"]');
+    nuevo[emp]=(input?input.value:'').trim().replace(/\/$/,'');
+  });
+  EMPRESAS_CARPETAS=nuevo;
+  guardarEmpresasCarpetas();
+  _nfCacheGlobal={timestamp:0,porEmpresa:{},fallidas:[]}; // invalidar caché tras cambiar rutas
+  toast('✅ Carpetas por empresa guardadas','ok');
+}
+function cfgCarpetasUsarActual(){
+  if(!(currentUser && currentUser.rol==='Administrador')){ toast('Solo un Administrador puede modificar las carpetas por empresa','er'); return; }
+  if(!SP.activo || !SP.carpetaUrl){ toast('Esta sesión no está corriendo dentro de SharePoint, o no se detectó la carpeta actual','er'); return; }
+  var empresaActual=currentUser&&(currentUser.empresa||currentUser.area);
+  if(!empresaActual){ toast('Tu usuario no tiene una empresa asignada','er'); return; }
+  var tb=document.getElementById('cfg-carpetas-tb');
+  if(!tb) return;
+  var tr=tb.querySelector('tr[data-emp="'+CSS.escape(empresaActual)+'"]');
+  if(!tr){ toast('Empresa "'+empresaActual+'" no está en la tabla','er'); return; }
+  var input=tr.querySelector('input[data-campo="ruta"]');
+  if(input) input.value=SP.carpetaUrl;
+  toast('📍 Ruta actual asignada a "'+empresaActual+'" — recuerda hacer clic en Guardar cambios','ok');
+}
+async function cfgCarpetasProbar(){
+  if(!(currentUser && currentUser.rol==='Administrador')){ toast('Solo un Administrador puede probar esta configuración','er'); return; }
+  var out=document.getElementById('cfg-carpetas-resultado');
+  if(out){ out.style.display='block'; out.innerHTML='🔄 Probando conexión con cada empresa configurada...'; }
+  var datos=await nfObtenerDatosGlobales(true);
+  var okEmpresas=Object.keys(datos.porEmpresa);
+  var lineas=[];
+  okEmpresas.forEach(function(e){ lineas.push('<div style="color:#0a7a3d">✅ '+homeEscape(e)+' — '+datos.porEmpresa[e].length+' documentos leídos</div>'); });
+  (datos.fallidas||[]).forEach(function(e){ lineas.push('<div style="color:#a02020">✗ '+homeEscape(e)+' — no se pudo leer (revisa la ruta o los permisos)</div>'); });
+  if(out) out.innerHTML=lineas.join('')||'<div>No hay ninguna empresa con ruta configurada todavía.</div>';
+}
+
+// ── Motor de búsqueda cruzada de nombres (Novedad de Documento) ─────────
+var _NF_CACHE_TTL_MS = 15*60*1000; // 15 minutos: balance entre actualidad y no saturar SharePoint
+var _nfCacheGlobal = {timestamp:0, porEmpresa:{}, fallidas:[]};
+var _MAPA_LM_LIGERO = {
+  'Código Actual':'codigoActual','Codigo Actual':'codigoActual',
+  'Descripción':'descripcion','Descripcion':'descripcion',
+  'Versión':'version','Version':'version','Versón':'version',
+  'Área Generadora':'areaGeneradora','Area Generadora':'areaGeneradora',
+  'Proceso':'proceso','Estado':'estado','Obsoleto':'obsoleto'
+};
+function _nfParsearListadoLigero(wb){
+  var ws=wb.Sheets[wb.SheetNames[0]];
+  var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  rows=rows.filter(function(r){return r.some(function(c){return c!=='';});});
+  var hdrIdx=0;
+  for(var ri=0;ri<Math.min(5,rows.length);ri++){
+    if(rows[ri].some(function(c){var s=String(c||'').toLowerCase();return s.indexOf('digo')>=0;})){hdrIdx=ri;break;}
+  }
+  var hdrs=rows[hdrIdx].map(function(h){return String(h||'').trim();});
+  var dataRows=rows.slice(hdrIdx+1);
+  var out=[];
+  dataRows.forEach(function(row){
+    var obj={};
+    hdrs.forEach(function(h,i){
+      var clave=_MAPA_LM_LIGERO[h]; if(!clave) return;
+      var val=row[i]; if(val===null||val===undefined||val==='') return;
+      obj[clave]=String(val).trim();
+    });
+    if(obj.codigoActual && obj.descripcion) out.push(obj);
+  });
+  return out;
+}
+// Descarga (o reutiliza de caché) el Listado Maestro "ligero" de cada
+// empresa configurada en EMPRESAS_CARPETAS. forzar=true ignora la caché.
+async function nfObtenerDatosGlobales(forzar){
+  var ahora=Date.now();
+  if(!forzar && (ahora-_nfCacheGlobal.timestamp)<_NF_CACHE_TTL_MS && Object.keys(_nfCacheGlobal.porEmpresa).length){
+    return _nfCacheGlobal;
+  }
+  var mapa=EMPRESAS_CARPETAS||{};
+  var porEmpresa={}; var fallidas=[];
+  await Promise.all(Object.keys(mapa).map(async function(empresa){
+    var ruta=(mapa[empresa]||'').trim();
+    if(!ruta) return; // sin carpeta configurada para esta empresa — se omite
+    try{
+      var url=ruta.replace(/\/$/,'')+'/'+OD_ARCHIVOS.lm;
+      var r=await fetch(url,{credentials:'include',cache:'no-cache'});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      var buf=await r.arrayBuffer();
+      var wb=XLSX.read(buf,{type:'array',cellDates:false,raw:false});
+      porEmpresa[empresa]=_nfParsearListadoLigero(wb);
+    }catch(e){
+      fallidas.push(empresa);
+      console.warn('[NF-Global] No se pudo leer Listado Maestro de '+empresa+':',e.message);
+    }
+  }));
+  _nfCacheGlobal={timestamp:ahora, porEmpresa:porEmpresa, fallidas:fallidas};
+  return _nfCacheGlobal;
+}
+var _NF_STOPWORDS = {'de':1,'del':1,'la':1,'el':1,'los':1,'las':1,'para':1,'por':1,'y':1,'en':1,'a':1,'un':1,'una':1,'con':1,'al':1,'lo':1,'su':1,'sus':1,'o':1,'e':1,'que':1,'se':1};
+function _nfNormalizar(s){
+  return String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+}
+function _nfPalabrasClave(nombre){
+  var norm=_nfNormalizar(nombre);
+  return norm.split(/[^A-Z0-9]+/).filter(function(w){return w.length>2 && !_NF_STOPWORDS[w.toLowerCase()];});
+}
+// % de coincidencia: qué proporción de las palabras clave del nombre nuevo
+// aparece también en la descripción existente.
+function _nfCalcularCoincidencia(palabrasNuevo, descripcionExistente){
+  var palabrasExist=_nfPalabrasClave(descripcionExistente);
+  if(!palabrasNuevo.length||!palabrasExist.length) return 0;
+  var coincid=palabrasNuevo.filter(function(w){return palabrasExist.indexOf(w)>=0;});
+  if(!coincid.length) return 0;
+  return Math.round((coincid.length/palabrasNuevo.length)*100);
+}
+var NF_UMBRAL_COINCIDENCIA = 40; // % mínimo para mostrar una coincidencia (evita ruido)
+function nfBuscarCoincidencias(nombreNuevo, datosGlobales){
+  var palabrasNuevo=_nfPalabrasClave(nombreNuevo);
+  if(!palabrasNuevo.length) return [];
+  var nombreNuevoNorm=_nfNormalizar(nombreNuevo);
+  var resultados=[];
+  Object.keys(datosGlobales.porEmpresa).forEach(function(empresa){
+    datosGlobales.porEmpresa[empresa].forEach(function(doc){
+      if(String(doc.obsoleto||'').toUpperCase()==='SI') return; // ignorar obsoletos
+      var descNorm=_nfNormalizar(doc.descripcion);
+      var score = (descNorm===nombreNuevoNorm) ? 100 : _nfCalcularCoincidencia(palabrasNuevo, doc.descripcion);
+      if(score>=NF_UMBRAL_COINCIDENCIA){
+        resultados.push({
+          empresa:empresa, codigo:doc.codigoActual||'', descripcion:doc.descripcion||'',
+          version:doc.version||'', area:doc.areaGeneradora||'', proceso:doc.proceso||'',
+          score:score
+        });
+      }
+    });
+  });
+  resultados.sort(function(a,b){return b.score-a.score;});
+  return resultados;
+}
+// Envuelve la descarga + búsqueda con manejo de errores: si algo falla
+// (sin red, sin rutas configuradas, etc.) NO bloquea al usuario — deja
+// continuar sin alerta, y solo registra el problema en consola/toast.
+function nfEjecutarBusquedaCoincidencias(nombre, callback){
+  nfObtenerDatosGlobales(false).then(function(datosGlobales){
+    var resultados=nfBuscarCoincidencias(nombre, datosGlobales);
+    callback(resultados, datosGlobales.fallidas||[]);
+  }).catch(function(e){
+    console.warn('[NF-Global] Error verificando coincidencias:',e && e.message);
+    callback([], []);
+  });
+}
+// ── Disparo automático al salir del campo "Nombre del documento" ───────
+function nfCheckCoincidenciasBlur(valor){
+  var tipoNov=(document.getElementById('nf-tipo')||{}).value||'';
+  if(tipoNov!=='Creación'&&tipoNov!=='Modificación') return;
+  if(!valor||valor.trim().length<4) return;
+  nfEjecutarBusquedaCoincidencias(valor, function(resultados, fallidas){
+    if(resultados.length){
+      nfMostrarAlertaCoincidencias(resultados, fallidas, valor, function(continuar){
+        window._nfCoincidenciasEstado = {nombre:_nfNormalizar(valor), aceptado:!!continuar};
+      });
+    } else {
+      window._nfCoincidenciasEstado = {nombre:_nfNormalizar(valor), aceptado:true, fallidas:fallidas};
+    }
+  });
+}
+// ── Candado final antes de guardar (nfGuardar) ─────────────────────────
+// Si el usuario ya revisó y aceptó este mismo nombre (por el chequeo al
+// salir del campo), no vuelve a preguntar. Si cambió el nombre después de
+// esa revisión, o nunca se disparó (p.ej. pegó el texto y guardó de una),
+// se ejecuta el chequeo aquí como última barrera antes de guardar.
+function nfVerificarCoincidenciasAntesDeGuardar(cb){
+  var tipoNov=(document.getElementById('nf-tipo')||{}).value||'';
+  if(tipoNov!=='Creación'&&tipoNov!=='Modificación'){ cb(); return; }
+  var valor=(document.getElementById('nf-nombredoc')||{}).value||'';
+  if(!valor||valor.trim().length<4){ cb(); return; }
+  var normActual=_nfNormalizar(valor);
+  var estado=window._nfCoincidenciasEstado;
+  if(estado && estado.nombre===normActual && estado.aceptado){ cb(); return; }
+  nfEjecutarBusquedaCoincidencias(valor, function(resultados, fallidas){
+    if(!resultados.length){
+      window._nfCoincidenciasEstado={nombre:normActual, aceptado:true, fallidas:fallidas};
+      cb();
+      return;
+    }
+    nfMostrarAlertaCoincidencias(resultados, fallidas, valor, function(continuar){
+      window._nfCoincidenciasEstado={nombre:normActual, aceptado:!!continuar};
+      if(continuar) cb();
+      // Si no continúa, el usuario se queda en el formulario para revisar/corregir.
+    });
+  });
+}
+// ── Modal de alerta de coincidencias ────────────────────────────────────
+var _nfCoincidenciasCb=null;
+function nfMostrarAlertaCoincidencias(resultados, fallidas, nombre, callback){
+  _nfCoincidenciasCb=callback;
+  var nombreEl=document.getElementById('nf-coinc-nombre'); if(nombreEl) nombreEl.textContent='"'+nombre+'"';
+  var tb=document.getElementById('nf-coinc-tbody');
+  if(tb){
+    tb.innerHTML=resultados.map(function(r){
+      var color = r.score>=80 ? '#a02020' : (r.score>=60 ? '#b8860b' : '#6b6b00');
+      return '<tr style="border-top:1px solid var(--brd)">'
+        +'<td style="padding:6px 8px;font-weight:600">'+homeEscape(r.codigo)+'</td>'
+        +'<td style="padding:6px 8px">'+homeEscape(r.descripcion)+'</td>'
+        +'<td style="padding:6px 8px">'+homeEscape(r.version)+'</td>'
+        +'<td style="padding:6px 8px">'+homeEscape(r.area)+'</td>'
+        +'<td style="padding:6px 8px">'+homeEscape(r.proceso)+'</td>'
+        +'<td style="padding:6px 8px">'+homeEscape(r.empresa)+'</td>'
+        +'<td style="padding:6px 8px;font-weight:700;color:'+color+'">'+r.score+'%</td>'
+        +'</tr>';
+    }).join('');
+  }
+  var fEl=document.getElementById('nf-coinc-fallidas');
+  if(fEl){
+    if(fallidas&&fallidas.length){ fEl.style.display='block'; fEl.textContent='⚠️ No se pudo consultar el Listado Maestro de: '+fallidas.join(', ')+' (verifica la ruta configurada o los permisos de SharePoint).'; }
+    else { fEl.style.display='none'; }
+  }
+  openMo('mo-nf-coincidencias');
+}
+function _nfCoincidenciasContinuar(){
+  closeMo('mo-nf-coincidencias');
+  var cb=_nfCoincidenciasCb; _nfCoincidenciasCb=null;
+  if(cb) cb(true);
+}
+function _nfCoincidenciasCancelar(){
+  closeMo('mo-nf-coincidencias');
+  var cb=_nfCoincidenciasCb; _nfCoincidenciasCb=null;
+  if(cb) cb(false);
+}
+
 // ── Administración (pantalla Configuración) de FORMATOS_OFICIALES ──────
 function cfgFormatosRender(){
+  var card=document.getElementById('cfg-formatos-card');
+  var esAdmin = !!(currentUser && currentUser.rol==='Administrador');
+  // Este módulo (ver y editar códigos/versiones de formatos por empresa) es
+  // exclusivo del rol Administrador, sin importar los permisos personalizados
+  // que se le hayan otorgado a otros roles sobre la página "Configuración".
+  if(card) card.style.display = esAdmin ? '' : 'none';
+  if(!esAdmin) return;
   var tb=document.getElementById('cfg-formatos-tb');
   if(!tb) return;
   var empresas=Object.keys(FORMATOS_OFICIALES);
@@ -16350,6 +16895,7 @@ function cfgFormatosRender(){
 }
 
 function cfgFormatosAgregarEmpresa(){
+  if(!(currentUser && currentUser.rol==='Administrador')){ toast('Solo un Administrador puede modificar los formatos por empresa','er'); return; }
   var nombre=prompt('Nombre de la nueva empresa/sociedad:');
   if(!nombre||!nombre.trim()) return;
   nombre=nombre.trim();
@@ -16365,6 +16911,7 @@ function cfgFormatosAgregarEmpresa(){
 }
 
 function cfgFormatosEliminar(empEncoded){
+  if(!(currentUser && currentUser.rol==='Administrador')){ toast('Solo un Administrador puede modificar los formatos por empresa','er'); return; }
   var emp=decodeURIComponent(empEncoded);
   if(!confirm('¿Eliminar la configuración de formatos para "'+emp+'"?')) return;
   delete FORMATOS_OFICIALES[emp];
@@ -16374,6 +16921,7 @@ function cfgFormatosEliminar(empEncoded){
 }
 
 function cfgFormatosGuardarTodo(){
+  if(!(currentUser && currentUser.rol==='Administrador')){ toast('Solo un Administrador puede modificar los formatos por empresa','er'); return; }
   var tb=document.getElementById('cfg-formatos-tb');
   if(!tb) return;
   var nuevo={};
@@ -16406,6 +16954,7 @@ function cfgFormatosGuardarTodo(){
 }
 
 function cfgFormatosRestaurar(){
+  if(!(currentUser && currentUser.rol==='Administrador')){ toast('Solo un Administrador puede modificar los formatos por empresa','er'); return; }
   if(!confirm('¿Restaurar los valores de fábrica? Se perderán los cambios guardados en esta tabla.')) return;
   FORMATOS_OFICIALES=JSON.parse(JSON.stringify(FORMATOS_OFICIALES_DEFAULT));
   guardarFormatosOficiales();
@@ -17064,7 +17613,7 @@ function loginOnEnter(e){if(e.key==='Enter')doLogin();}
 // MÓDULO ONEDRIVE — Lectura y escritura persistente del Excel
 // Usa File System Access API + IndexedDB para recordar el archivo
 // ============================================================
-// ── NOMBRES DE ARCHIVOS DE LA CARPETA DocControl_Sofgen ───────
+// ── NOMBRES DE ARCHIVOS DE LA CARPETA COMPARTIDA (OneDrive/SharePoint) ───────
 var OD_ARCHIVOS = {
   lm:           'ListadoMaestro.xlsx',
   copias:       'CopiaControladas.xlsx',
@@ -17215,7 +17764,7 @@ async function spEscribirArchivoTexto(nombre, texto, mime){
 
 var OD = {
   fileHandle:    null,   // archivo principal (ListadoMaestro.xlsx) — retro-compat
-  carpetaHandle: null,   // handle de la carpeta DocControl_Sofgen
+  carpetaHandle: null,   // handle de la carpeta compartida con los archivos Excel
   handles: {
     lm: null, copias: null, solicitudes: null,
     inspecciones: null, colaboradores: null, actividades: null
@@ -18699,7 +19248,7 @@ async function odCargarListado(){
   window._odCargando=true;
   var _odCargandoRelease=function(){ window._odCargando=false; };
   if(!SP.activo&&!OD.carpetaHandle&&!OD.fileHandle){
-    toast('Selecciona la carpeta DocControl_Sofgen primero','er');
+    toast('Selecciona primero la carpeta donde están tus archivos Excel','er');
     if(!document.getElementById('od-seleccion-screen')) odMostrarSeleccion();
     _odCargandoRelease();
     return;
@@ -20097,7 +20646,7 @@ function odMostrarReconectarSinHandle(nombreCarpeta){
       var tieneExcel=false;
       try{ await dirHandle.getFileHandle(OD_ARCHIVOS.lm,{create:false}); tieneExcel=true; }catch(e){}
       if(!tieneExcel){
-        toast('La carpeta seleccionada no tiene los archivos Excel. Selecciona DocControl_Sofgen.','er');
+        toast('La carpeta seleccionada no tiene los archivos Excel. Verifica que sea la carpeta correcta.','er');
         btn.textContent='&#9654; Abrir '+nombreCarpeta; btn.disabled=false;
         return;
       }
@@ -20252,20 +20801,19 @@ function odMostrarSeleccion(avisoMsg){
         +'<div style="font-size:12px;font-weight:700;color:#006860;margin-bottom:8px">📁 ¿Cómo seleccionar la carpeta?</div>'
         +'<div style="font-size:11px;color:#336666;line-height:1.8">'
           +'1. Haz clic en el botón de abajo<br>'
-          +'2. En el explorador, navega hasta la carpeta <strong>DocControl_Sofgen</strong><br>'
-          +'   (la que contiene los archivos Excel)<br>'
+          +'2. En el explorador, navega hasta la carpeta <strong>donde están tus archivos Excel</strong> compartidos<br>'
           +'3. Selecciona esa carpeta y confirma<br>'
           +'4. La app la recordará para las próximas sesiones'
         +'</div>'
         +'<div style="margin-top:10px;background:#e8f0f0;border-radius:6px;padding:7px 10px;font-size:10px;font-family:monospace;color:#0a4a4a;border-left:3px solid #006860">'
-          +'DocControl_Sofgen/<br>'
+          +'📁 (tu carpeta compartida)/<br>'
           +'&nbsp;&nbsp;├─ ListadoMaestro.xlsx<br>'
           +'&nbsp;&nbsp;├─ CopiaControladas.xlsx<br>'
           +'&nbsp;&nbsp;├─ Solicitudes.xlsx<br>'
           +'&nbsp;&nbsp;└─ ...'
         +'</div>'
       +'</div>'
-      +'<button id="od-btn-seleccion" onclick="odSeleccionarDesdeSeleccion()" style="width:100%;padding:14px;background:#00A99E;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.3px">📁 Seleccionar carpeta DocControl_Sofgen</button>'
+      +'<button id="od-btn-seleccion" onclick="odSeleccionarDesdeSeleccion()" style="width:100%;padding:14px;background:#00A99E;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.3px">📁 Seleccionar carpeta de archivos</button>'
       +'<div style="margin-top:10px;font-size:10px;color:#5e9090">Solo debes hacerlo <strong>una vez</strong> por equipo — la app lo recordará automáticamente</div>'
     +'</div>';
   document.body.appendChild(d);
@@ -20287,9 +20835,9 @@ async function odSeleccionarDesdeSeleccion(){
       catch(e){ faltantes.push(archivosObligatorios[i]); }
     }
     if(faltantes.length){
-      var msg='Faltan archivos en la carpeta:\n'+faltantes.join('\n')+'\n\nVerifica que seleccionaste la carpeta DocControl_Sofgen correcta.';
+      var msg='Faltan archivos en la carpeta:\n'+faltantes.join('\n')+'\n\nVerifica que seleccionaste la carpeta correcta (la que contiene los archivos Excel compartidos).';
       alert(msg);
-      if(btn){btn.textContent='📁 Seleccionar carpeta DocControl_Sofgen';btn.disabled=false;}
+      if(btn){btn.textContent='📁 Seleccionar carpeta de archivos';btn.disabled=false;}
       return;
     }
     OD.carpetaHandle=dirHandle;
@@ -20307,7 +20855,7 @@ async function odSeleccionarDesdeSeleccion(){
       console.error('[OD] Error en odCargarListado:',eLoad);
       odOcultarCargando();
       alert('Error al cargar datos: '+eLoad.message);
-      if(btn){btn.textContent='📁 Seleccionar carpeta DocControl_Sofgen';btn.disabled=false;}
+      if(btn){btn.textContent='📁 Seleccionar carpeta de archivos';btn.disabled=false;}
       return;
     }
     odOcultarCargando();
@@ -20316,12 +20864,12 @@ async function odSeleccionarDesdeSeleccion(){
     showLogin();
   }catch(err){
     if(err.name==='AbortError'){
-      if(btn){btn.textContent='📁 Seleccionar carpeta DocControl_Sofgen';btn.disabled=false;}
+      if(btn){btn.textContent='📁 Seleccionar carpeta de archivos';btn.disabled=false;}
       return;
     }
     odOcultarCargando();
     alert('Error al seleccionar carpeta: '+err.message);
-    if(btn){btn.textContent='📁 Seleccionar carpeta DocControl_Sofgen';btn.disabled=false;}
+    if(btn){btn.textContent='📁 Seleccionar carpeta de archivos';btn.disabled=false;}
   }
 }
 
@@ -27229,19 +27777,25 @@ function nfGuardar(){
     alert('⚠️ Campos obligatorios sin diligenciar:\n\n• '+faltantes.join('\n• '));
     return;
   }
-  // Verificar si el código ya tiene solicitud vigente en Ruta de Borrador
-  // (cualquier estado distinto de Oficializado, Anulado o Retirado por Vencimiento)
-  var codCheckG=(document.getElementById('nf-cod')||{}).value||'';
-  var rbAlertaG=nfVerificarRutaBorrador(codCheckG);
-  if(rbAlertaG){
-    nfMostrarAlertaRB(rbAlertaG, function(accion){
-      if(accion==='cancelar') return;
-      if(accion==='renovar') nfRenovarSolicitud(rbAlertaG);
-      nfGuardarEjecutar();
-    });
-    return; // esperar decisión del usuario
+  function _nfContinuarTrasCoincidencias(){
+    // Verificar si el código ya tiene solicitud vigente en Ruta de Borrador
+    // (cualquier estado distinto de Oficializado, Anulado o Retirado por Vencimiento)
+    var codCheckG=(document.getElementById('nf-cod')||{}).value||'';
+    var rbAlertaG=nfVerificarRutaBorrador(codCheckG);
+    if(rbAlertaG){
+      nfMostrarAlertaRB(rbAlertaG, function(accion){
+        if(accion==='cancelar') return;
+        if(accion==='renovar') nfRenovarSolicitud(rbAlertaG);
+        nfGuardarEjecutar();
+      });
+      return; // esperar decisión del usuario
+    }
+    nfGuardarEjecutar();
   }
-  nfGuardarEjecutar();
+  // Candado final: si el nombre del documento (Creación/Modificación) tiene
+  // coincidencias sin revisar en el Listado Maestro de otras empresas, se
+  // muestra la alerta aquí antes de dejar continuar con el guardado.
+  nfVerificarCoincidenciasAntesDeGuardar(_nfContinuarTrasCoincidencias);
 }
 // Extraer la lógica de guardado para llamarla tras el modal
 
