@@ -1478,10 +1478,13 @@ tbody tr:last-child td{border-bottom:none}
     </div>
     <div style="margin-bottom:14px">
       <label class="fl" style="display:block;margin-bottom:4px">Ruta relativa en SharePoint (recomendado)</label>
-      <div style="display:flex;gap:8px">
-        <input class="fi" id="cfg-colab-ruta" style="flex:1" placeholder="/sites/Documentacion/Compartido/Colaboradores">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input class="fi" id="cfg-colab-ruta" style="flex:1;min-width:220px" placeholder="/sites/Documentacion/LM_SofgenPharma/Colaboradores">
         <button class="btn sm" onclick="cfgColabGuardarRuta()">💾 Guardar</button>
+        <button class="btn gh sm" onclick="cfgColabDetectarAutomatico()" title="Prueba rutas cercanas a donde corre esta sesión, buscando una carpeta llamada Colaboradores">🔍 Detectar automáticamente</button>
       </div>
+      <div id="cfg-colab-ruta-actual" style="font-size:10px;color:var(--tx3);margin-top:6px"></div>
+      <div id="cfg-colab-resultado" style="font-size:11px;margin-top:8px;display:none"></div>
     </div>
     <div>
       <label class="fl" style="display:block;margin-bottom:4px">O carpeta local (si no corres dentro de SharePoint) — se conecta una vez por navegador</label>
@@ -16778,10 +16781,47 @@ function cfgColabRender(){
   if(!esAdmin) return;
   var inp=document.getElementById('cfg-colab-ruta');
   if(inp) inp.value = CONFIG_COLABORADORES.rutaSharePoint||'';
+  var actual=document.getElementById('cfg-colab-ruta-actual');
+  if(actual){
+    actual.textContent = (SP.activo && SP.carpetaUrl) ? ('Ruta actual de esta sesión (para referencia): '+SP.carpetaUrl) : 'Esta sesión no está corriendo dentro de SharePoint.';
+  }
   var estLocal=document.getElementById('cfg-colab-estado-local');
   if(estLocal){
     estLocal.textContent = OD_COLAB.carpetaHandle ? '✅ Conectada en este navegador' : '— No conectada en este navegador';
     estLocal.style.color = OD_COLAB.carpetaHandle ? '#0a7a3d' : 'var(--tx3)';
+  }
+}
+// Prueba rutas candidatas cercanas a SP.carpetaUrl, reemplazando cada nivel
+// (desde el más profundo hacia la raíz) por "Colaboradores", hasta encontrar
+// una donde exista Colaboradores.xlsx. Cubre el caso típico de que la
+// carpeta "Colaboradores" sea hermana de las carpetas de cada empresa,
+// dentro de una carpeta raíz compartida (p.ej. LM_SofgenPharma).
+async function cfgColabDetectarAutomatico(){
+  if(!(currentUser && currentUser.rol==='Administrador')){ toast('Solo un Administrador puede hacer esto','er'); return; }
+  if(!SP.activo || !SP.carpetaUrl){ toast('Esta sesión no está corriendo dentro de SharePoint','er'); return; }
+  var out=document.getElementById('cfg-colab-resultado');
+  var partes=SP.carpetaUrl.split('/').filter(Boolean);
+  var candidatos=[];
+  for(var i=partes.length-1;i>=1;i--){
+    var base=partes.slice(0,i);
+    var candidata='/'+base.concat('Colaboradores').join('/');
+    if(candidatos.indexOf(candidata)<0) candidatos.push(candidata);
+  }
+  if(out){ out.style.display='block'; out.innerHTML='🔄 Probando '+candidatos.length+' rutas posibles cerca de tu carpeta actual...'; }
+  var encontrado=null;
+  for(var c=0;c<candidatos.length;c++){
+    var data=await spLeerArchivoDeRuta(candidatos[c], OD_ARCHIVOS.colaboradores);
+    if(data){ encontrado=candidatos[c]; break; }
+  }
+  if(encontrado){
+    var inp2=document.getElementById('cfg-colab-ruta'); if(inp2) inp2.value=encontrado;
+    CONFIG_COLABORADORES.rutaSharePoint=encontrado;
+    guardarConfigColaboradores();
+    if(out) out.innerHTML='✅ Encontrada y guardada automáticamente: <code>'+homeEscape(encontrado)+'</code>';
+    toast('✅ Ruta de Colaboradores detectada y guardada','ok');
+  } else {
+    if(out) out.innerHTML='✗ No se encontró "Colaboradores.xlsx" probando rutas cercanas a la actual ('+candidatos.length+' probadas). Verifica que la carpeta "Colaboradores" esté dentro del mismo sitio de SharePoint, o escribe la ruta manualmente copiándola de la barra de direcciones al abrir esa carpeta en SharePoint.';
+    toast('No se pudo detectar automáticamente — revisa el mensaje o escribe la ruta a mano','er');
   }
 }
 function cfgColabGuardarRuta(){
