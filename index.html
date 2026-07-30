@@ -1467,6 +1467,32 @@ tbody tr:last-child td{border-bottom:none}
     <div id="cfg-carpetas-resultado" style="margin-top:10px;font-size:11px;display:none"></div>
   </div>
 
+  <div class="card" style="margin-top:14px;border-top:3px solid var(--T)" id="cfg-colab-card">
+    <div class="sh" style="margin-bottom:10px">
+      <div class="st">👥 Carpeta Única Compartida de Colaboradores</div>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:12px;line-height:1.6">
+      El archivo <code>Colaboradores.xlsx</code> es solo de consulta (nunca se edita desde la app), así que puede vivir en
+      <strong>una sola carpeta compartida para todas las empresas</strong>, en vez de una copia en cada carpeta.
+      Configura cualquiera de las dos opciones (o ambas — se intenta primero la ruta de SharePoint):
+    </div>
+    <div style="margin-bottom:14px">
+      <label class="fl" style="display:block;margin-bottom:4px">Ruta relativa en SharePoint (recomendado)</label>
+      <div style="display:flex;gap:8px">
+        <input class="fi" id="cfg-colab-ruta" style="flex:1" placeholder="/sites/Documentacion/Compartido/Colaboradores">
+        <button class="btn sm" onclick="cfgColabGuardarRuta()">💾 Guardar</button>
+      </div>
+    </div>
+    <div>
+      <label class="fl" style="display:block;margin-bottom:4px">O carpeta local (si no corres dentro de SharePoint) — se conecta una vez por navegador</label>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn gh sm" onclick="cfgColabConectarCarpetaLocal()">📁 Conectar carpeta local</button>
+        <button class="btn gh sm" onclick="cfgColabDesconectarCarpetaLocal()">✕ Desconectar</button>
+        <span id="cfg-colab-estado-local" style="font-size:11px">—</span>
+      </div>
+    </div>
+  </div>
+
   </div>
 
 
@@ -2706,6 +2732,26 @@ tbody tr:last-child td{border-bottom:none}
 
 
 <!-- MODALES -->
+
+<div class="mo" id="mo-lm-firmas"><div class="md">
+  <button class="md-x" onclick="lmCancelarFirmas()">X</button>
+  <div class="md-t">✍️ Elaborador y Revisor del Listado Maestro</div>
+  <div style="font-size:12px;color:var(--tx2);margin-bottom:12px;line-height:1.5">
+    Estos datos se imprimen en el listado que vas a generar. Quedan recordados para la próxima vez, pero puedes cambiarlos cuando quieras.
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+    <div class="fp"><label class="fl rq">Nombre — Elaboró</label><input class="fi" id="lm-firma-elab-nombre" placeholder="Nombre completo"></div>
+    <div class="fp"><label class="fl">Cargo — Elaboró</label><input class="fi" id="lm-firma-elab-cargo" placeholder="Cargo"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+    <div class="fp"><label class="fl rq">Nombre — Revisó</label><input class="fi" id="lm-firma-rev-nombre" placeholder="Nombre completo"></div>
+    <div class="fp"><label class="fl">Cargo — Revisó</label><input class="fi" id="lm-firma-rev-cargo" placeholder="Cargo"></div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end">
+    <button class="btn gh sm" onclick="lmCancelarFirmas()">Cancelar</button>
+    <button class="btn sm" onclick="lmConfirmarFirmas()">Continuar</button>
+  </div>
+</div></div>
 
 <div class="mo" id="mo-nf-coincidencias"><div class="md" style="max-width:860px">
   <button class="md-x" onclick="_nfCoincidenciasCancelar()">X</button>
@@ -10344,7 +10390,7 @@ function limpM(){
 // ============================================================
 // CONFIGURACION
 // ============================================================
-function renderCfg(){document.getElementById('c-org').value=cfg.org||'Sofgen Pharma';document.getElementById('c-rev').value=cfg.revDias||365;document.getElementById('c-aler').value=cfg.alertDias||30;if(typeof cfgFormatosRender==='function')cfgFormatosRender();if(typeof cfgCarpetasRender==='function')cfgCarpetasRender();}
+function renderCfg(){document.getElementById('c-org').value=cfg.org||'Sofgen Pharma';document.getElementById('c-rev').value=cfg.revDias||365;document.getElementById('c-aler').value=cfg.alertDias||30;if(typeof cfgFormatosRender==='function')cfgFormatosRender();if(typeof cfgCarpetasRender==='function')cfgCarpetasRender();if(typeof cfgColabRender==='function')cfgColabRender();}
 function saveConf(){cfg={org:document.getElementById('c-org').value||'Sofgen Pharma',revDias:parseInt(document.getElementById('c-rev').value)||365,alertDias:parseInt(document.getElementById('c-aler').value)||30};saveArr('cfg',cfg);toast('Configuracion guardada');}
 function clearAll(){
   if(!confirm('Borrar TODOS los datos?'))return;
@@ -16565,6 +16611,46 @@ var FORMATOS_OFICIALES_DEFAULT = {
 // puede editar códigos y versiones desde Configuración sin tocar el código.
 var FORMATOS_OFICIALES = loadObj('formatosOficiales', FORMATOS_OFICIALES_DEFAULT);
 
+// ============================================================
+// ELABORADOR / REVISOR MANUAL DEL LISTADO MAESTRO (PDF y Excel)
+// ============================================================
+// Antes los nombres de quien elabora y quien revisa el Listado Maestro
+// estaban fijos en el código. Ahora se piden en un modal justo antes de
+// generar (tanto en PDF como en Excel), y quedan recordados en este
+// navegador para la próxima vez, sin quedar amarrados al código de la app.
+var LM_FIRMAS_DEFAULT = {
+  elabNombre:'JEFFERSON AREVALO SANCHEZ', elabCargo:'COORDINADOR DE CALIDAD II',
+  revNombre:'GUISELLA RESTREPO MOLINA',  revCargo:'DIRECTORA SISTEMA DE GESTIÓN'
+};
+var _lmFirmasCb = null;
+function lmSolicitarFirmas(callback){
+  var guardado = loadObj('lmFirmas', LM_FIRMAS_DEFAULT);
+  var elNom=document.getElementById('lm-firma-elab-nombre'); if(elNom) elNom.value=guardado.elabNombre||'';
+  var elCar=document.getElementById('lm-firma-elab-cargo');  if(elCar) elCar.value=guardado.elabCargo||'';
+  var reNom=document.getElementById('lm-firma-rev-nombre');  if(reNom) reNom.value=guardado.revNombre||'';
+  var reCar=document.getElementById('lm-firma-rev-cargo');   if(reCar) reCar.value=guardado.revCargo||'';
+  _lmFirmasCb=callback;
+  openMo('mo-lm-firmas');
+}
+function lmConfirmarFirmas(){
+  var f={
+    elabNombre:(document.getElementById('lm-firma-elab-nombre').value||'').trim(),
+    elabCargo:(document.getElementById('lm-firma-elab-cargo').value||'').trim(),
+    revNombre:(document.getElementById('lm-firma-rev-nombre').value||'').trim(),
+    revCargo:(document.getElementById('lm-firma-rev-cargo').value||'').trim()
+  };
+  if(!f.elabNombre||!f.revNombre){ toast('Ingresa al menos el nombre de quien elabora y de quien revisa','er'); return; }
+  saveArr('lmFirmas', f);
+  window._lmFirmasActual=f;
+  closeMo('mo-lm-firmas');
+  var cb=_lmFirmasCb; _lmFirmasCb=null;
+  if(cb) cb(f);
+}
+function lmCancelarFirmas(){
+  closeMo('mo-lm-firmas');
+  _lmFirmasCb=null;
+}
+
 function guardarFormatosOficiales(){
   saveArr('formatosOficiales', FORMATOS_OFICIALES);
 }
@@ -16607,6 +16693,120 @@ var EMPRESAS_CARPETAS_DEFAULT = {
 };
 var EMPRESAS_CARPETAS = loadObj('empresasCarpetas', EMPRESAS_CARPETAS_DEFAULT);
 function guardarEmpresasCarpetas(){ saveArr('empresasCarpetas', EMPRESAS_CARPETAS); }
+
+// ============================================================
+// CARPETA ÚNICA COMPARTIDA DE COLABORADORES
+// ============================================================
+// El archivo Colaboradores.xlsx (solo de consulta, nunca se escribe desde
+// la app) puede vivir en UNA sola carpeta compartida para todas las
+// empresas, en vez de estar duplicado dentro de la carpeta de cada una.
+// Soporta dos formas de conexión, según cómo esté corriendo la app:
+//   1) Ruta de SharePoint (modo SP.activo, o cualquier fetch autenticado
+//      contra el mismo origen) — se configura UNA sola vez, para todos.
+//   2) Carpeta local (File System Access API) — cada navegador/dispositivo
+//      debe concederle acceso una sola vez (limitación de seguridad del
+//      navegador; no se puede centralizar como la ruta de SharePoint).
+// Se intenta primero la ruta de SharePoint; si no está configurada o falla,
+// se intenta la carpeta local conectada; si tampoco hay, se cae al
+// comportamiento anterior (archivo o pestaña dentro de la carpeta propia
+// de la empresa).
+var CONFIG_COLABORADORES_DEFAULT = { rutaSharePoint:'' };
+var CONFIG_COLABORADORES = loadObj('colaboradoresConfig', CONFIG_COLABORADORES_DEFAULT);
+function guardarConfigColaboradores(){ saveArr('colaboradoresConfig', CONFIG_COLABORADORES); }
+
+var OD_COLAB = {carpetaHandle:null};
+// Al cargar la página, intentar recuperar en silencio el handle de la
+// carpeta local compartida (si el navegador aún recuerda el permiso). Si no
+// hay permiso o no hay handle guardado, simplemente queda desconectada
+// hasta que alguien la conecte de nuevo desde Configuración.
+(async function _odColabInit(){
+  try{
+    var h=await idbLoadDirColab();
+    if(h){
+      var perm = window.location.protocol==='file:' ? 'granted' : await h.queryPermission({mode:'read'});
+      if(perm==='granted') OD_COLAB.carpetaHandle=h;
+    }
+  }catch(e){}
+})();
+
+// Leer un archivo desde una ruta de SharePoint distinta a la carpeta
+// conectada de la empresa (ruta fija, configurada por el Administrador).
+async function spLeerArchivoDeRuta(ruta, nombre){
+  try{
+    var url=(ruta||'').replace(/\/$/,'')+'/'+nombre;
+    var r=await fetch(url,{credentials:'include',cache:'no-cache'});
+    if(!r.ok) throw new Error('HTTP '+r.status+' al leer '+nombre);
+    var buf=await r.arrayBuffer();
+    return {buf:buf,lastModified:Date.now(),handle:null};
+  }catch(e){
+    console.warn('[Colaboradores] Error leyendo '+nombre+' desde ruta compartida:',e.message);
+    return null;
+  }
+}
+// Leer un archivo desde un FileSystemDirectoryHandle distinto al de la
+// carpeta de la empresa (la carpeta local compartida de Colaboradores).
+async function _leerArchivoDeCarpetaLocal(carpetaHandle, nombre){
+  if(!carpetaHandle) return null;
+  try{
+    var fh=await carpetaHandle.getFileHandle(nombre,{create:false});
+    var file=await fh.getFile();
+    return {buf:await file.arrayBuffer(), lastModified:file.lastModified, handle:fh};
+  }catch(e){ console.warn('[Colaboradores] Error leyendo '+nombre+' de carpeta local compartida:',e.message); return null; }
+}
+// Punto de entrada usado por odCargarListado(): intenta SharePoint primero,
+// luego carpeta local compartida, y devuelve null si ninguna aplica (en
+// cuyo caso el llamador cae al comportamiento anterior por empresa).
+async function odLeerColaboradoresCompartido(){
+  var ruta=(CONFIG_COLABORADORES.rutaSharePoint||'').trim();
+  if(ruta){
+    var data=await spLeerArchivoDeRuta(ruta, OD_ARCHIVOS.colaboradores);
+    if(data) return data;
+    console.warn('[Colaboradores] No se pudo leer desde la ruta SharePoint configurada: '+ruta);
+  }
+  if(OD_COLAB.carpetaHandle){
+    var data2=await _leerArchivoDeCarpetaLocal(OD_COLAB.carpetaHandle, OD_ARCHIVOS.colaboradores);
+    if(data2) return data2;
+  }
+  return null;
+}
+
+// ── Administración (pantalla Configuración) de la carpeta de Colaboradores ──
+function cfgColabRender(){
+  var esAdmin = !!(currentUser && currentUser.rol==='Administrador');
+  var card=document.getElementById('cfg-colab-card');
+  if(card) card.style.display = esAdmin ? '' : 'none';
+  if(!esAdmin) return;
+  var inp=document.getElementById('cfg-colab-ruta');
+  if(inp) inp.value = CONFIG_COLABORADORES.rutaSharePoint||'';
+  var estLocal=document.getElementById('cfg-colab-estado-local');
+  if(estLocal){
+    estLocal.textContent = OD_COLAB.carpetaHandle ? '✅ Conectada en este navegador' : '— No conectada en este navegador';
+    estLocal.style.color = OD_COLAB.carpetaHandle ? '#0a7a3d' : 'var(--tx3)';
+  }
+}
+function cfgColabGuardarRuta(){
+  if(!(currentUser && currentUser.rol==='Administrador')){ toast('Solo un Administrador puede modificar esta configuración','er'); return; }
+  var inp=document.getElementById('cfg-colab-ruta');
+  CONFIG_COLABORADORES.rutaSharePoint = inp ? inp.value.trim().replace(/\/$/,'') : '';
+  guardarConfigColaboradores();
+  toast('✅ Ruta de Colaboradores guardada','ok');
+}
+async function cfgColabConectarCarpetaLocal(){
+  if(!window.showDirectoryPicker){ toast('Tu navegador no soporta selección de carpetas locales (usa Chrome o Edge)','er'); return; }
+  try{
+    var h=await window.showDirectoryPicker();
+    OD_COLAB.carpetaHandle=h;
+    await idbSaveDirColab(h);
+    toast('📁 Carpeta local de Colaboradores conectada en este navegador','ok');
+    cfgColabRender();
+  }catch(e){ if(e && e.name!=='AbortError') toast('No se pudo conectar la carpeta: '+e.message,'er'); }
+}
+function cfgColabDesconectarCarpetaLocal(){
+  OD_COLAB.carpetaHandle=null;
+  idbSaveDirColab(null);
+  toast('Carpeta local de Colaboradores desconectada de este navegador','ok');
+  cfgColabRender();
+}
 
 // ── Administración (pantalla Configuración) de EMPRESAS_CARPETAS ───────
 function cfgCarpetasRender(){
@@ -17792,7 +17992,7 @@ var OD = {
 };
 
 //  IndexedDB: persistir el fileHandle entre sesiones 
-var _IDB = {name:'SofGenOD', store:'handles', key:'lm0019', keyDir:'carpeta'};
+var _IDB = {name:'SofGenOD', store:'handles', key:'lm0019', keyDir:'carpeta', keyDirColab:'carpetaColaboradores'};
 
 function idbOpen(){
   return new Promise(function(ok,fail){
@@ -17850,6 +18050,33 @@ async function idbLoadDir(){
     var db=await idbOpen();
     var tx=db.transaction(_IDB.store,'readonly');
     var req=tx.objectStore(_IDB.store).get(_IDB.keyDir);
+    var res=await new Promise(function(ok,fail){
+      req.onsuccess=function(){ok(req.result);};
+      req.onerror=fail;
+    });
+    db.close();
+    return res||null;
+  }catch(e){ return null; }
+}
+
+// ── Igual que arriba, pero para la carpeta ÚNICA compartida de
+// Colaboradores.xlsx (modo local, File System Access API). Cada navegador
+// necesita conceder su propio permiso una vez — no se puede centralizar
+// como la ruta de SharePoint, por seguridad del navegador.
+async function idbSaveDirColab(handle){
+  try{
+    var db=await idbOpen();
+    var tx=db.transaction(_IDB.store,'readwrite');
+    tx.objectStore(_IDB.store).put(handle,_IDB.keyDirColab);
+    await new Promise(function(ok,fail){tx.oncomplete=ok;tx.onerror=fail;});
+    db.close();
+  }catch(e){ console.warn('idbSaveDirColab:',e); }
+}
+async function idbLoadDirColab(){
+  try{
+    var db=await idbOpen();
+    var tx=db.transaction(_IDB.store,'readonly');
+    var req=tx.objectStore(_IDB.store).get(_IDB.keyDirColab);
     var res=await new Promise(function(ok,fail){
       req.onsuccess=function(){ok(req.result);};
       req.onerror=fail;
@@ -19575,10 +19802,19 @@ async function odCargarListado(){
       }
     }catch(eSol){ console.warn('OD: no se pudo leer hoja Solicitudes de Usuarios:',eSol.message); }
 
-    // Leer Colaboradores.xlsx (o hoja del LM si no hay carpeta)
+    // Leer Colaboradores.xlsx: primero se intenta la carpeta ÚNICA compartida
+    // (configurada por un Administrador en Configuración), y solo si no está
+    // disponible se cae al comportamiento anterior (archivo o pestaña propia
+    // de la carpeta de esta empresa).
     try{
       var wsColab=null;
-      if(OD.carpetaHandle){
+      var colabCompartido=await odLeerColaboradoresCompartido();
+      if(colabCompartido){
+        var wbColabC=XLSX.read(colabCompartido.buf,{type:'array',cellDates:false,raw:false});
+        var wsColabNombreC=['Listado de Colaboradores','Colaboradores'];
+        wsColabNombreC.forEach(function(n){if(!wsColab&&wbColabC.Sheets[n])wsColab=wbColabC.Sheets[n];});
+        if(!wsColab&&wbColabC.SheetNames[0]) wsColab=wbColabC.Sheets[wbColabC.SheetNames[0]];
+      } else if(OD.carpetaHandle){
         var colabData=await odLeerArchivo(OD_ARCHIVOS.colaboradores);
         if(colabData){
           var wbColab=XLSX.read(colabData.buf,{type:'array',cellDates:false,raw:false});
@@ -19605,6 +19841,7 @@ async function odCargarListado(){
         console.log('OD: '+colaboradores.length+' colaboradores cargados');
       }
     }catch(eCol){ console.warn('OD: no se pudo leer hoja Colaboradores:',eCol.message); }
+
 
     // Leer hoja Codigo_Doc_Nuevos (col A=tipo, B=prefijo/consecutivo, C=corporativo?)
     try{
@@ -22400,8 +22637,10 @@ function generarListadoPDF(){
   var lang = window._selLM;
   if(!lang){toast('Selecciona un idioma','er');return;}
   closeMo('mo-pdf-idioma');
-  toast(lang==='es'?'Generando PDF del Listado Maestro...':lang==='pt'?'Gerando PDF da Lista Mestra...':'Generating Master Document List PDF...','if');
-  setTimeout(function(){_buildListadoPDF(lang);},150);
+  lmSolicitarFirmas(function(){
+    toast(lang==='es'?'Generando PDF del Listado Maestro...':lang==='pt'?'Gerando PDF da Lista Mestra...':'Generating Master Document List PDF...','if');
+    setTimeout(function(){_buildListadoPDF(lang);},150);
+  });
 }
 
 async function _buildListadoPDF(lang){
@@ -22671,8 +22910,8 @@ async function _buildListadoPDF(lang){
       }
       y+=ah;
       // Filas auth
-      [[L.auth1Resp,'JEFFERSON AREVALO SANCHEZ',L.auth1Cargo,'',fechaHoy],
-       [L.auth2Resp,'GUISELLA RESTREPO MOLINA', L.auth2Cargo,'',fechaHoy]].forEach(function(row){
+      [[L.auth1Resp, (window._lmFirmasActual&&window._lmFirmasActual.elabNombre)||'JEFFERSON AREVALO SANCHEZ', (window._lmFirmasActual&&window._lmFirmasActual.elabCargo)||L.auth1Cargo,'',fechaHoy],
+       [L.auth2Resp, (window._lmFirmasActual&&window._lmFirmasActual.revNombre)||'GUISELLA RESTREPO MOLINA', (window._lmFirmasActual&&window._lmFirmasActual.revCargo)||L.auth2Cargo,'',fechaHoy]].forEach(function(row){
         rect(x0,y,W,ah,C.white,C.brd,0.5);
         ax=x0;
         for(var ai2=0;ai2<acs.length;ai2++){
@@ -25802,13 +26041,15 @@ function generarExcelLM(){
   }
   closeMo('mo-lm-excel');
 
-  if(es){
-    // Español: sin traducción, generar directamente
-    _generarExcelConDatos(data, selectedCols, selectedEstados, lang);
-  } else {
-    // EN o PT: traducir todo el contenido via API antes de generar
-    _generarExcelConTraduccion(data, selectedCols, selectedEstados, lang);
-  }
+  lmSolicitarFirmas(function(){
+    if(es){
+      // Español: sin traducción, generar directamente
+      _generarExcelConDatos(data, selectedCols, selectedEstados, lang);
+    } else {
+      // EN o PT: traducir todo el contenido via API antes de generar
+      _generarExcelConTraduccion(data, selectedCols, selectedEstados, lang);
+    }
+  });
 }
 
 // ============================================================
@@ -26125,6 +26366,20 @@ function _generarExcelConDatos(data, selectedCols, selectedEstados, lang, tMap){
   mPairs.forEach(function(p,mi){var c0=mi*mStep;if(c0<NC)r2[c0]={v:p[0],t:'s',s:S_MLBL};if(c0+1<NC)r2[c0+1]={v:p[1],t:'s',s:S_MVAL};});
   aoa.push(r2);
 
+  // Metadata adicional: Elaborado por / Revisado por, ingresados manualmente
+  // por el usuario al generar el listado (ya no quedan fijos en el código).
+  var firmasLM = window._lmFirmasActual || {};
+  var Telab = es?'Elaborado por:':pt?'Elaborado por:':'Prepared by:';
+  var Trev  = es?'Revisado por:':pt?'Revisado por:':'Reviewed by:';
+  var r2b=[]; for(var cib=0;cib<NC;cib++) r2b.push({v:'',t:'s',s:S_MVAL});
+  var fPairs=[
+    [Telab, (firmasLM.elabNombre||'')+(firmasLM.elabCargo?' — '+firmasLM.elabCargo:'')],
+    [Trev,  (firmasLM.revNombre||'')+(firmasLM.revCargo?' — '+firmasLM.revCargo:'')]
+  ];
+  var fStep=Math.max(1,Math.floor(NC/fPairs.length));
+  fPairs.forEach(function(p,mi){var c0=mi*fStep;if(c0<NC)r2b[c0]={v:p[0],t:'s',s:S_MLBL};if(c0+1<NC)r2b[c0+1]={v:p[1],t:'s',s:S_MVAL};});
+  aoa.push(r2b);
+
   // Encabezados
   aoa.push(selectedCols.map(function(c){
     return {v:es?c.es:pt?(c.pt||c.es):c.en,t:'s',s:S_HDR};
@@ -26151,8 +26406,8 @@ function _generarExcelConDatos(data, selectedCols, selectedEstados, lang, tMap){
   var ws=XLSX.utils.aoa_to_sheet(aoa);
   ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:NC-1}},{s:{r:1,c:0},e:{r:1,c:NC-1}}];
   ws['!cols']=selectedCols.map(function(c){return{wch:c.w||20};});
-  ws['!rows']=[{hpt:34},{hpt:22},{hpt:18},{hpt:28}].concat(data.map(function(){return{hpt:16};}));
-  ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:3,c:0},e:{r:3,c:NC-1}})};
+  ws['!rows']=[{hpt:34},{hpt:22},{hpt:18},{hpt:18},{hpt:28}].concat(data.map(function(){return{hpt:16};}));
+  ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:4,c:0},e:{r:4,c:NC-1}})};
   XLSX.utils.book_append_sheet(wb,ws,es?'Listado Maestro':pt?'Lista Mestra':'Master List');
 
   var fname=getFormatoOficial('listado').cod+'_'+(es?'Listado_Maestro':pt?'Lista_Mestra':'Master_Document_List')+'_'+fechaHoy+'.xlsx';
